@@ -1,6 +1,7 @@
 #include <QCoreApplication>
 #include "transitionmodel.h"
 #include "transitionlineargaussian.h"
+#include "measurementlineargaussian.h"
 
 #include <Eigen/Dense>
 
@@ -10,8 +11,9 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-//    TransitionModel transitionModel;
-    TransitionLinearGaussian transitionLinearGaussian(0.005);
+
+    MeasurementLinearGaussian measure;
+//    TransitionLinearGaussian transitionLinearGaussian(0.005);
 
     return a.exec();
 }
