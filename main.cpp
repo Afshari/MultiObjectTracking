@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
 
 //    TransitionModel transitionModel;
-    TransitionLinearGaussian transitionLinearGaussian;
+    TransitionLinearGaussian transitionLinearGaussian(0.005);
 
     return a.exec();
 }

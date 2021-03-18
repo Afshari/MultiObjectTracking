@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.11.0, 2021-03-18T19:30:32. -->
+<!-- Written by QtCreator 4.11.0, 2021-03-18T20:36:27. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -327,7 +327,7 @@
     <value type="bool" key="RunConfiguration.UseQmlDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
     <value type="QString" key="RunConfiguration.WorkingDirectory"></value>
-    <value type="QString" key="RunConfiguration.WorkingDirectory.default">/private/var/folders/tb/6pd5rx6s0zjcq5dgswgf_5d00000gn/T/QtCreator-usGQIe/qtc-cmake-CeIpsqcM</value>
+    <value type="QString" key="RunConfiguration.WorkingDirectory.default">/Users/mohsen/Documents/qt_ws/build-MultiObjectTracking-Desktop_Qt_5_14_0_clang_64bit-Debug</value>
    </valuemap>
    <value type="int" key="ProjectExplorer.Target.RunConfigurationCount">1</value>
   </valuemap>

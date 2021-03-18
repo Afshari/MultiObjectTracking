@@ -3,6 +3,7 @@
 
 #include "transitionmodel.h"
 #include <iostream>
+#include "utils.h"
 #include <Eigen/Dense>
 
 using Eigen::MatrixXd;
@@ -10,10 +11,12 @@ using Eigen::MatrixXd;
 class TransitionLinearGaussian : public TransitionModel
 {
 public:
-    TransitionLinearGaussian();
+    TransitionLinearGaussian(float q);
 
 private:
+    float q;
     MatrixXd constantVelocity;
+    MatrixXd Q;
 
 
 };

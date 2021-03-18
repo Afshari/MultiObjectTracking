@@ -19,6 +19,7 @@ find_package(Qt5Core)
 
 add_executable(MultiObjectTracking
   main.cpp
+  utils.cpp
   transitionmodel.cpp
   transitionlineargaussian.cpp
 )
