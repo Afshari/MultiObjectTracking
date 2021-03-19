@@ -36,10 +36,13 @@ private:
     TransitionModel *transitionModel;
 
     VectorXd xPredict(StateGaussian *prior, int dt);
+    MatrixXd PPredict(StateGaussian *prior, int dt);
 
 private slots:
     void testxPredictDt0();
     void testxPredictDt1();
+    void testPPredictDt0();
+    void testPPredictDt1();
 
 signals:
 
