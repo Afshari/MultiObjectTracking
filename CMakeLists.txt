@@ -24,5 +24,7 @@ add_executable(MultiObjectTracking
   transitionlineargaussian.cpp
   measurementmodel.cpp
   measurementlineargaussian.cpp
+  kalmanfilter.cpp
 )
+
 target_link_libraries(MultiObjectTracking Qt5::Core Qt5::Test Eigen3::Eigen)
