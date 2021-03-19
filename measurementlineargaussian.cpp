@@ -4,6 +4,6 @@ MeasurementLinearGaussian::MeasurementLinearGaussian() : state(4) {
 
     state << 0, 1, 0, 1;
 
-    std::cout << state << std::endl;
+//    std::cout << state << std::endl;
 
 }

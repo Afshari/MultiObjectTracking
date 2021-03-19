@@ -12,6 +12,11 @@ class TransitionLinearGaussian : public TransitionModel
 {
 public:
     TransitionLinearGaussian(float q);
+    virtual MatrixXd transitionFunction(int dt) override;
+
+protected:
+
+
 
 private:
     float q;

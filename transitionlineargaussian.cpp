@@ -10,13 +10,20 @@ TransitionLinearGaussian::TransitionLinearGaussian(float q) : constantVelocity(2
          0.5,  1;
     Q = this->q * Q;
 
-    std::cout << Q << std::endl;
+//    std::cout << Q << std::endl;
 
     constantVelocity << 1, 1,
                         0, 1;
 
-    std::cout << constantVelocity << std::endl;
+//    std::cout << constantVelocity << std::endl;
+//    std::cout << Utils::blkdiag(constantVelocity, 2) << std::endl;
 
-    std::cout << Utils::blkdiag(constantVelocity, 2) << std::endl;
+}
 
+
+MatrixXd TransitionLinearGaussian::transitionFunction(int dt) {
+    if(dt == 0)
+        return MatrixXd::Identity(4, 4);
+    else
+        return Utils::blkdiag(constantVelocity, 2);
 }

@@ -12,6 +12,11 @@ class TransitionModel : public QObject
     Q_OBJECT
 public:
     explicit TransitionModel(QObject *parent = nullptr);
+    virtual MatrixXd transitionFunction(int dt) { return MatrixXd(); }
+
+protected:
+
+
 
 private:
 

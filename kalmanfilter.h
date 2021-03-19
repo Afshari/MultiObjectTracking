@@ -2,6 +2,7 @@
 #define KALMANFILTER_H
 
 #include <QObject>
+#include <QTest>
 #include <Eigen/Dense>
 #include <iostream>
 
@@ -10,6 +11,8 @@ using Eigen::VectorXd;
 
 #include "measurementmodel.h"
 #include "transitionmodel.h"
+#include "transitionlineargaussian.h"
+#include "stategaussian.h"
 
 
 class KalmanFilter : public QObject
@@ -19,7 +22,7 @@ public:
     explicit KalmanFilter(MeasurementModel *measurementModel, TransitionModel *transitionModel,
                           QObject *parent = nullptr);
 
-    void predict();
+    void predict(StateGaussian *prior, int dt);
     void update();
 
 private:
@@ -31,6 +34,12 @@ private:
 
     MeasurementModel *measurementModel;
     TransitionModel *transitionModel;
+
+    VectorXd xPredict(StateGaussian *prior, int dt);
+
+private slots:
+    void testxPredictDt0();
+    void testxPredictDt1();
 
 signals:
 

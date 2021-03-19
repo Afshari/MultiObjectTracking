@@ -3,5 +3,5 @@
 
 TransitionModel::TransitionModel(QObject *parent) : QObject(parent) {
 
-    qDebug() << "Run TransitionModel";
 }
+
