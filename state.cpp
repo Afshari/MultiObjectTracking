@@ -4,10 +4,10 @@ State::State(QObject *parent) : QObject(parent) {
 
 }
 
-Eigen::VectorXd State::getX() {
+VectorXd State::getX() const {
     return *this->x;
 }
 
-Eigen::MatrixXd State::getP() {
+MatrixXd State::getP() const {
     return *this->p;
 }

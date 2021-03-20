@@ -22,8 +22,10 @@ public:
     explicit KalmanFilter(MeasurementModel *measurementModel, TransitionModel *transitionModel,
                           QObject *parent = nullptr);
 
-    void predict(StateGaussian *prior, int dt);
+    void predict(const StateGaussian &prior, int dt);
     void update();
+
+    friend class TestKalmanFilter;
 
 private:
     VectorXd prior;
@@ -35,14 +37,13 @@ private:
     MeasurementModel *measurementModel;
     TransitionModel *transitionModel;
 
-    VectorXd xPredict(StateGaussian *prior, int dt);
-    MatrixXd PPredict(StateGaussian *prior, int dt);
+    VectorXd xPredict(const StateGaussian &prior, int dt);
+    MatrixXd PPredict(const StateGaussian &prior, int dt);
 
-private slots:
-    void testxPredictDt0();
-    void testxPredictDt1();
-    void testPPredictDt0();
-    void testPPredictDt1();
+    MatrixXd kalmanGain(const MatrixXd &crossCov, const MatrixXd &predictCov);
+    MatrixXd PUpdate(const MatrixXd &gain, const MatrixXd &pPred, const MatrixXd &pMeas);
+    MatrixXd xUpdate(const VectorXd &xPred, const MatrixXd &gain, const VectorXd &xMeas, const VectorXd &xMeasPred);
+
 
 signals:
 

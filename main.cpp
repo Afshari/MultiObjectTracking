@@ -7,6 +7,9 @@
 #include "stategaussian.h"
 #include "kalmanfilter.h"
 
+#include "Tests/testkalmanfilter.h"
+#include "Tests/testmeasurementlineargaussian.h"
+
 #include <iostream>
 
 #include <Eigen/Dense>
@@ -18,20 +21,12 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-//    VectorXd x(4);
-//    x << -0.16260711, 1, 0.12305334, 1;
-//    Eigen::Vector4d pVector(1.5, 0.5, 1.5, 0.5);
-//    MatrixXd p = pVector.asDiagonal();
 
-//    StateGaussian state(&x, &p);
+    TestMeasurementLinearGaussian measurementLinearGaussian;
+    QTest::qExec(&measurementLinearGaussian);
 
-    MeasurementLinearGaussian measure;
-    TransitionLinearGaussian transitionLinearGaussian(0.005);
-    KalmanFilter kalman(&measure, &transitionLinearGaussian);
-
-    QTest::qExec(&kalman);
-
-//    kalman.predict(&state);
+    TestKalmanFilter kalmanFilter;
+    QTest::qExec(&kalmanFilter);
 
     return a.exec();
 }
