@@ -41,3 +41,22 @@ MatrixXd KalmanFilter::xUpdate(const VectorXd &xPred, const MatrixXd &gain, cons
 
     return xPred + gain * ( xMeas - xMeasPred );
 }
+
+MeasurementPrediction* KalmanFilter::predictMeasurement(StateGaussian *predState) {
+
+    VectorXd *predMeas = new VectorXd(measurementModel->h(predState->getX()));
+//    MatrixXd H = measurementModel->H();
+    MatrixXd *crossCov = new MatrixXd(measurementModel->crossCov(predState->getP()));
+    MatrixXd *innovCov = new MatrixXd(measurementModel->innovationCov(*crossCov));
+
+    return new MeasurementPrediction(predState, predMeas, innovCov, crossCov);
+}
+
+
+
+
+
+
+
+
+

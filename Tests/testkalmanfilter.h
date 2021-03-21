@@ -36,6 +36,8 @@ private slots:
     void testxUpdate1();
     void testxUpdate2();
 
+    void testPredictMeasurement1();
+
 };
 
 #endif // TESTKALMANFILTER_H

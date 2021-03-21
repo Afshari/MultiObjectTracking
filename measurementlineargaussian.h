@@ -14,11 +14,13 @@ class MeasurementLinearGaussian : public MeasurementModel
 {
 public:
     MeasurementLinearGaussian(MatrixXd* measurementNoiseCovariance);
-    virtual MatrixXd measurementFunction() override;
+    virtual MatrixXd H() override;
+    virtual VectorXd h(const VectorXd &state) override;
 
-protected:
     MatrixXd innovationCov(const MatrixXd &measCrossCov);
     MatrixXd crossCov(const MatrixXd &predCov);
+
+
 
     friend class TestMeasurementLinearGaussian;
 

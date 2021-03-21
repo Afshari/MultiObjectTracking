@@ -10,6 +10,7 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 #include "measurementmodel.h"
+#include "measurementprediction.h"
 #include "transitionmodel.h"
 #include "transitionlineargaussian.h"
 #include "stategaussian.h"
@@ -43,6 +44,7 @@ private:
     MatrixXd kalmanGain(const MatrixXd &crossCov, const MatrixXd &predictCov);
     MatrixXd PUpdate(const MatrixXd &gain, const MatrixXd &pPred, const MatrixXd &pMeas);
     MatrixXd xUpdate(const VectorXd &xPred, const MatrixXd &gain, const VectorXd &xMeas, const VectorXd &xMeasPred);
+    MeasurementPrediction *predictMeasurement(StateGaussian *predState);
 
 
 signals:

@@ -8,20 +8,25 @@ MeasurementLinearGaussian::MeasurementLinearGaussian(MatrixXd* measurementNoiseC
 }
 
 
-MatrixXd MeasurementLinearGaussian::measurementFunction() {
+MatrixXd MeasurementLinearGaussian::H() {
     MatrixXd measurement(2, 4);
     measurement <<  1, 0, 0, 0,
                     0, 0, 1, 0;
     return measurement;
 }
 
+VectorXd MeasurementLinearGaussian::h(const VectorXd &state) {
+
+    return H() * state;
+}
+
 MatrixXd MeasurementLinearGaussian::innovationCov(const MatrixXd &measCrossCov) {
 
-    return measurementFunction() * measCrossCov + (*measurementNoiseCovariance);
+    return H() * measCrossCov + (*measurementNoiseCovariance);
 }
 
 MatrixXd MeasurementLinearGaussian::crossCov(const MatrixXd &predCov) {
-    return predCov * measurementFunction().transpose();
+    return predCov * H().transpose();
 }
 
 

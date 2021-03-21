@@ -25,6 +25,7 @@ add_executable(MultiObjectTracking
   transitionmodel.cpp
   transitionlineargaussian.cpp
   measurementmodel.cpp
+  measurementprediction.cpp
   measurementlineargaussian.cpp
   kalmanfilter.cpp
 

@@ -228,6 +228,42 @@ void TestKalmanFilter::testxUpdate2() {
     QVERIFY2(kalman->xUpdate(xPred, gain, xMeas, xMeasPred).isApprox(ref, 1e-4), "Update Mean is Not Correct");
 }
 
+void TestKalmanFilter::testPredictMeasurement1() {
+
+    VectorXd refPredMeas(2);
+    refPredMeas << 0.83739289, 1.12305334;
+
+    MatrixXd refCrossCov(4, 2);
+    refCrossCov << 1.17522955, 0.03433435,
+                   0.5025,     0.,
+                   0.03433435, 1.17480954,
+                   0.,         0.5025;
+
+    MatrixXd refInnovCov(2, 2);
+    refInnovCov << 1.92522955, 0.03433435,
+                   0.03433435, 1.92480954;
+
+
+    VectorXd x(4);
+    x << 0.83739289, 1., 1.12305334, 1.;
+
+    MatrixXd P(4, 4);
+    P <<    1.17522955, 0.5025    , 0.03433435, 0.,
+            0.5025    , 0.505     , 0.        , 0.,
+            0.03433435, 0.        , 1.17480954, 0.5025,
+            0.        , 0.        , 0.5025    , 0.505;
+
+    StateGaussian state(&x, &P);
+
+    MeasurementPrediction *measurementPrediction;
+    measurementPrediction = kalman->predictMeasurement(&state);
+
+    QVERIFY2( (*measurementPrediction->crossCov).isApprox(refCrossCov, 1e-4), "" );
+    QVERIFY2( (*measurementPrediction->predMeas).isApprox(refPredMeas, 1e-4), "" );
+    QVERIFY2( (*measurementPrediction->innovationCov).isApprox(refInnovCov, 1e-4), "" );
+
+}
+
 
 
 

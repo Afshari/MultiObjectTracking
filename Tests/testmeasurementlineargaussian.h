@@ -19,6 +19,7 @@ private slots:
     void initTestCase();
     void testInnovationCov();
     void testCrossCov();
+    void testh();
 
 
 signals:

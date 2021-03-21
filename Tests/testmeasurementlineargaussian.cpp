@@ -48,3 +48,25 @@ void TestMeasurementLinearGaussian::testCrossCov() {
 
     QVERIFY2(measure->crossCov(predCov).isApprox(ref, 1e-4), "Cross Covariance Not Correct");
 }
+
+void TestMeasurementLinearGaussian::testh() {
+
+    VectorXd ref(2);
+    ref << 0.83739289, 1.12305334;
+
+    VectorXd state(4);
+    state << 0.83739289, 1., 1.12305334, 1.;
+
+    QVERIFY2(measure->h(state).isApprox(ref, 1e-4), "h is Not Correct");
+}
+
+
+
+
+
+
+
+
+
+
+
