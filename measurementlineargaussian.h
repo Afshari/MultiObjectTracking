@@ -17,8 +17,8 @@ public:
     virtual MatrixXd H() override;
     virtual VectorXd h(const VectorXd &state) override;
 
-    MatrixXd innovationCov(const MatrixXd &measCrossCov);
-    MatrixXd crossCov(const MatrixXd &predCov);
+    MatrixXd innovationCov(const MatrixXd &measCrossCov) override;
+    MatrixXd crossCov(const MatrixXd &predCov) override;
 
 
 

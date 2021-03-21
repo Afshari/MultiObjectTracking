@@ -13,10 +13,10 @@ class MeasurementModel : public QObject
 public:
     explicit MeasurementModel(QObject *parent = nullptr);
     virtual MatrixXd H() { return MatrixXd(); }
-    virtual VectorXd h(const VectorXd &state) { return VectorXd(); }
+    virtual VectorXd h(const VectorXd &state) { std::ignore = state; return VectorXd(); }
 
-    virtual MatrixXd innovationCov(const MatrixXd &measCrossCov) { return MatrixXd(); }
-    virtual MatrixXd crossCov(const MatrixXd &predCov) { return MatrixXd(); }
+    virtual MatrixXd innovationCov(const MatrixXd &measCrossCov) { std::ignore = measCrossCov; return MatrixXd(); }
+    virtual MatrixXd crossCov(const MatrixXd &predCov) { std::ignore = predCov; return MatrixXd(); }
 
 protected:
     MatrixXd* measurementNoiseCovariance;
@@ -24,7 +24,6 @@ protected:
 signals:
 
 private slots:
-    void test();
 
 };
 

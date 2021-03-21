@@ -17,9 +17,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt5Core)
 
+include_directories(include)
+
 add_executable(MultiObjectTracking
   main.cpp
   utils.cpp
+  detection.cpp
   state.cpp
   stategaussian.cpp
   transitionmodel.cpp
@@ -28,9 +31,12 @@ add_executable(MultiObjectTracking
   measurementprediction.cpp
   measurementlineargaussian.cpp
   kalmanfilter.cpp
+  associator.cpp
+  pda.cpp
 
   Tests/testmeasurementlineargaussian.cpp
   Tests/testkalmanfilter.cpp
+  tests/testpda.cpp
 )
 
 target_link_libraries(MultiObjectTracking Qt5::Core Qt5::Test Eigen3::Eigen)

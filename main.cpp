@@ -9,6 +9,7 @@
 
 #include "Tests/testkalmanfilter.h"
 #include "Tests/testmeasurementlineargaussian.h"
+#include "Tests/testpda.h"
 
 #include <iostream>
 
@@ -27,6 +28,9 @@ int main(int argc, char *argv[])
 
     TestKalmanFilter kalmanFilter;
     QTest::qExec(&kalmanFilter);
+
+    TestPDA testPDA;
+    QTest::qExec(&testPDA);
 
     return a.exec();
 }

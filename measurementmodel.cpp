@@ -6,6 +6,3 @@ MeasurementModel::MeasurementModel(QObject *parent) : QObject(parent) {
 
 }
 
-void MeasurementModel::test() {
-
-}
