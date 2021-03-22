@@ -21,7 +21,7 @@ double PDA::logPDF(const VectorXd &xDetection, const VectorXd &xMeasPred, const 
 }
 
 double PDA::toPDF(const double &logPDF) {
-    return exp(logPDF);
+    return qExp(logPDF);
 }
 
 double PDA::getProbability(const double &logPDF) {

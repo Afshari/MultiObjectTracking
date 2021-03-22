@@ -1,7 +1,7 @@
 #ifndef PDA_H
 #define PDA_H
 
-#include <math.h>
+#include <qmath.h>
 #include "associator.h"
 #include "stats.hpp"
 

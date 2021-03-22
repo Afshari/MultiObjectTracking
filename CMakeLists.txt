@@ -33,10 +33,13 @@ add_executable(MultiObjectTracking
   kalmanfilter.cpp
   associator.cpp
   pda.cpp
+  singlehypothesis.cpp
+  multihypothesis.cpp
 
   Tests/testmeasurementlineargaussian.cpp
   Tests/testkalmanfilter.cpp
   tests/testpda.cpp
+  Tests/testmultihypothesis.cpp
 )
 
 target_link_libraries(MultiObjectTracking Qt5::Core Qt5::Test Eigen3::Eigen)

@@ -10,6 +10,7 @@
 #include "Tests/testkalmanfilter.h"
 #include "Tests/testmeasurementlineargaussian.h"
 #include "Tests/testpda.h"
+#include "Tests/testmultihypothesis.h"
 
 #include <iostream>
 
@@ -31,6 +32,10 @@ int main(int argc, char *argv[])
 
     TestPDA testPDA;
     QTest::qExec(&testPDA);
+
+
+    TestMultiHypothesis testMultiHypothesis;
+    QTest::qExec(&testMultiHypothesis);
 
     return a.exec();
 }
