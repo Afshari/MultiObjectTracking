@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <Eigen/Dense>
-#include "stategaussian.h"
+#include "state.h"
 #include "measurementmodel.h"
 
 using Eigen::MatrixXd;
@@ -13,10 +13,10 @@ class MeasurementPrediction : public QObject
 {
     Q_OBJECT
 public:
-    explicit MeasurementPrediction(StateGaussian *predState, VectorXd *predMeas, MatrixXd *innovationCov,
+    explicit MeasurementPrediction(State *state, VectorXd *predMeas, MatrixXd *innovationCov,
                 MatrixXd *crossCov, QObject *parent = nullptr);
 
-    StateGaussian *predState;
+    State *state;
     VectorXd *predMeas;
     MatrixXd *innovationCov;
     MatrixXd *crossCov;

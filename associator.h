@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QList>
-#include "stategaussian.h"
+#include "state.h"
 #include "detection.h"
 
 class Associator : public QObject

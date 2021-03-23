@@ -202,7 +202,6 @@ void TestKalmanFilter::testxUpdate1() {
     xMeasPred << 0, 0;
 
     QVERIFY2(kalman->xUpdate(xPred, gain, xMeas, xMeasPred).isApprox(ref, 1e-4), "Update Mean is Not Correct");
-
 }
 
 void TestKalmanFilter::testxUpdate2() {
@@ -261,8 +260,48 @@ void TestKalmanFilter::testPredictMeasurement1() {
     QVERIFY2( (*measurementPrediction->crossCov).isApprox(refCrossCov, 1e-4), "" );
     QVERIFY2( (*measurementPrediction->predMeas).isApprox(refPredMeas, 1e-4), "" );
     QVERIFY2( (*measurementPrediction->innovationCov).isApprox(refInnovCov, 1e-4), "" );
-
 }
+
+void TestKalmanFilter::testUpdate1() {
+
+    VectorXd refx(4);
+    refx << -0.3950381, 1., -0.06644286, 1.;
+    MatrixXd refP = 0.5 * MatrixXd::Identity(4, 4);
+
+
+    VectorXd x(4);
+    x << 0, 1, 0, 1;
+    MatrixXd P(4, 4);
+    P << 1.5, 0, 0, 0,
+         0, 0.5, 0, 0,
+         0, 0, 1.5, 0,
+         0, 0, 0, 0.5;
+    StateGaussian state(&x, &P);
+
+
+    MatrixXd mNoiseCovar = 0.75 * MatrixXd::Identity(2, 2);
+    MeasurementLinearGaussian measurementModel(&mNoiseCovar);
+
+    VectorXd measurement(2);
+    measurement << -0.59255716, -0.0996643;
+
+    VectorXd xPredMeas(2);
+    xPredMeas << 0, 0;
+    MatrixXd PPredMeas(2, 2);
+    PPredMeas << 2.25, 0, 0, 2.25;
+    StateGaussian stateMeasurement(&xPredMeas, &PPredMeas);
+    MatrixXd crossCov(4, 2);
+    crossCov << 1.5, 0., 0. , 0., 0. , 1.5, 0. , 0.;
+
+    MeasurementPrediction measurementPrediction(&stateMeasurement, nullptr, nullptr, &crossCov);
+
+
+    State* posteriorState = kalman->update(state, measurementModel, measurement, measurementPrediction);
+
+    QVERIFY2( posteriorState->getX().isApprox(refx, 1e-4), "");
+    QVERIFY2( posteriorState->getP().isApprox(refP), "");
+}
+
 
 
 

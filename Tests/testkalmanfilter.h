@@ -6,6 +6,7 @@
 
 #include "measurementlineargaussian.h"
 #include "kalmanfilter.h"
+#include "stategaussian.h"
 
 class TestKalmanFilter : public QObject
 {
@@ -38,6 +39,9 @@ private slots:
 
     void testPredictMeasurement1();
 
+    void testUpdate1();
+
 };
+
 
 #endif // TESTKALMANFILTER_H

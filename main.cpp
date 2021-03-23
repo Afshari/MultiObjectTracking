@@ -27,15 +27,15 @@ int main(int argc, char *argv[])
     TestMeasurementLinearGaussian measurementLinearGaussian;
     QTest::qExec(&measurementLinearGaussian);
 
-    TestKalmanFilter kalmanFilter;
-    QTest::qExec(&kalmanFilter);
-
     TestPDA testPDA;
     QTest::qExec(&testPDA);
 
-
     TestMultiHypothesis testMultiHypothesis;
     QTest::qExec(&testMultiHypothesis);
+
+    TestKalmanFilter kalmanFilter;
+    QTest::qExec(&kalmanFilter);
+
 
     return a.exec();
 }

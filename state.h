@@ -13,6 +13,7 @@ class State : public QObject
     Q_OBJECT
 public:
     explicit State(QObject *parent = nullptr);
+
     VectorXd getX() const;
     MatrixXd getP() const;
 

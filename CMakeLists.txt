@@ -15,6 +15,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
 find_package(Qt5Core)
 
 include_directories(include)
@@ -42,4 +44,7 @@ add_executable(MultiObjectTracking
   Tests/testmultihypothesis.cpp
 )
 
+
 target_link_libraries(MultiObjectTracking Qt5::Core Qt5::Test Eigen3::Eigen)
+
+

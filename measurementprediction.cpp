@@ -1,9 +1,9 @@
 #include "measurementprediction.h"
 
-MeasurementPrediction::MeasurementPrediction(StateGaussian *predState, VectorXd *predMeas, MatrixXd *innovationCov,
+MeasurementPrediction::MeasurementPrediction(State *predState, VectorXd *predMeas, MatrixXd *innovationCov,
                                              MatrixXd *crossCov,QObject *parent) : QObject(parent) {
 
-    this->predState = predState;
+    this->state = predState;
     this->predMeas = predMeas;
     this->innovationCov = innovationCov;
     this->crossCov = crossCov;
