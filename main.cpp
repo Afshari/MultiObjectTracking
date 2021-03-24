@@ -12,6 +12,8 @@
 #include "Tests/testpda.h"
 #include "Tests/testmultihypothesis.h"
 
+#include "debugserver.h"
+
 #include <iostream>
 
 #include <Eigen/Dense>
@@ -23,19 +25,20 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
+    DebugServer server;
+    server.start();
 
-    TestMeasurementLinearGaussian measurementLinearGaussian;
-    QTest::qExec(&measurementLinearGaussian);
+//    TestMeasurementLinearGaussian measurementLinearGaussian;
+//    QTest::qExec(&measurementLinearGaussian);
 
-    TestPDA testPDA;
-    QTest::qExec(&testPDA);
+//    TestPDA testPDA;
+//    QTest::qExec(&testPDA);
 
-    TestMultiHypothesis testMultiHypothesis;
-    QTest::qExec(&testMultiHypothesis);
+//    TestMultiHypothesis testMultiHypothesis;
+//    QTest::qExec(&testMultiHypothesis);
 
-    TestKalmanFilter kalmanFilter;
-    QTest::qExec(&kalmanFilter);
-
+//    TestKalmanFilter kalmanFilter;
+//    QTest::qExec(&kalmanFilter);
 
     return a.exec();
 }

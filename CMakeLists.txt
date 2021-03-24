@@ -4,7 +4,8 @@ project(MultiObjectTracking LANGUAGES CXX)
 
 find_package(Qt5Test REQUIRED)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
-
+find_package(Qt5Core)
+find_package(Qt5Network)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -17,7 +18,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-find_package(Qt5Core)
+
 
 include_directories(include)
 
@@ -38,6 +39,8 @@ add_executable(MultiObjectTracking
   singlehypothesis.cpp
   multihypothesis.cpp
 
+  debugserver.cpp
+
   Tests/testmeasurementlineargaussian.cpp
   Tests/testkalmanfilter.cpp
   tests/testpda.cpp
@@ -45,6 +48,6 @@ add_executable(MultiObjectTracking
 )
 
 
-target_link_libraries(MultiObjectTracking Qt5::Core Qt5::Test Eigen3::Eigen)
+target_link_libraries(MultiObjectTracking Qt5::Core Qt5::Test Qt5::Network Eigen3::Eigen)
 
 
