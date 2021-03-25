@@ -14,6 +14,7 @@ public:
     QList<SingleHypothesis *> *items;
 
     friend class TestMultiHypothesis;
+    friend class DebugServer;
 
 protected:
     void normalizeWeights();

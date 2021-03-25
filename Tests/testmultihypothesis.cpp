@@ -24,7 +24,6 @@ void TestMultiHypothesis::testNormalize() {
     MultiHypothesis multi(&list);
     multi.normalizeWeights();
 
-
     for(int i = 0; i < list.length(); i++) {
         QVERIFY2( qAbs( multi.items->at(i)->probability - probs.at(i) ) < 1e-4, "" );
     }

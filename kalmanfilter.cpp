@@ -7,19 +7,18 @@ KalmanFilter::KalmanFilter(MeasurementModel *measurementModel, TransitionModel *
     this->transitionModel = transitionModel;
 }
 
-void KalmanFilter::predict(const State &prior, int dt) {
+State* KalmanFilter::predict(const State &prior, int dt) {
 
-    std::cout << xPredict(prior, dt)  << std::endl;
-    std::cout << PPredict(prior, dt)  << std::endl;
+//    std::cout << xPredict(prior, dt)  << std::endl;
+//    std::cout << PPredict(prior, dt)  << std::endl;
+    VectorXd *x = new VectorXd(xPredict(prior, dt));
+    MatrixXd *P = new MatrixXd(PPredict(prior, dt));
+
+    return new StateGaussian(x, P);
 }
 
 State* KalmanFilter::update(const State &state, const MeasurementModel &measurementModel,
                           const VectorXd &measurement, const MeasurementPrediction &measurementPrediction) {
-
-//    posterior_covariance, kalman_gain = self._posterior_covariance(hypothesis)
-//    posterior_mean = predicted_state.state_vector + \
-//                kalman_gain@(hypothesis.measurement.state_vector -
-//                             hypothesis.measurement_prediction.state_vector)
 
     MatrixXd crossCov = this->measurementModel->crossCov(state.getP());
     MatrixXd gain = kalmanGain(crossCov, measurementPrediction.state->getP());
@@ -58,9 +57,15 @@ MatrixXd KalmanFilter::xUpdate(const VectorXd &xPred, const MatrixXd &gain, cons
 MeasurementPrediction* KalmanFilter::predictMeasurement(State *predState) {
 
     VectorXd *predMeas = new VectorXd(measurementModel->h(predState->getX()));
+//    std::cout << *predMeas << std::endl;
+//    std::cout << "----------" << std::endl;
 //    MatrixXd H = measurementModel->H();
     MatrixXd *crossCov = new MatrixXd(measurementModel->crossCov(predState->getP()));
+//    std::cout << *crossCov << std::endl;
+//    std::cout << "----------" << std::endl;
     MatrixXd *innovCov = new MatrixXd(measurementModel->innovationCov(*crossCov));
+//    std::cout << *innovCov << std::endl;
+//    std::cout << "----------" << std::endl;
 
     return new MeasurementPrediction(predState, predMeas, innovCov, crossCov);
 }

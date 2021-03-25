@@ -22,6 +22,9 @@ VectorXd MeasurementLinearGaussian::h(const VectorXd &state) {
 
 MatrixXd MeasurementLinearGaussian::innovationCov(const MatrixXd &measCrossCov) {
 
+//    std::cout << "H: \r\n" << H() << std::endl;
+//    std::cout << "meas Cross Cov: \r\n" << measCrossCov << std::endl;
+//    std::cout << "Noise Cov: \r\n" << (*measurementNoiseCovariance) << std::endl;
     return H() * measCrossCov + (*measurementNoiseCovariance);
 }
 

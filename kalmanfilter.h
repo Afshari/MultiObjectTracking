@@ -24,11 +24,12 @@ public:
     explicit KalmanFilter(MeasurementModel *measurementModel, TransitionModel *transitionModel,
                           QObject *parent = nullptr);
 
-    void predict(const State &prior, int dt);
+    State* predict(const State &prior, int dt);
     State* update(const State &state, const MeasurementModel &measurementModel,
                  const VectorXd &measurement, const MeasurementPrediction &measurementPrediction);
 
     friend class TestKalmanFilter;
+    friend class DebugServer;
 
 private:
     VectorXd prior;

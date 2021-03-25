@@ -20,6 +20,7 @@ protected:
     double getProbability(const double &logPDF);
 
     friend class TestPDA;
+    friend class DebugServer;
 
 };
 

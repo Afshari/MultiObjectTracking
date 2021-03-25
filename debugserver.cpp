@@ -2,8 +2,8 @@
 
 DebugServer::DebugServer(QObject *parent) : QObject(parent) {
 
-    MatrixXd mNoiseCovar = 0.75 * MatrixXd::Identity(2, 2);
-    measurementModel = new MeasurementLinearGaussian(&mNoiseCovar);
+    MatrixXd *mNoiseCovar = new MatrixXd(.75 * MatrixXd::Identity(2, 2));
+    measurementModel = new MeasurementLinearGaussian(mNoiseCovar);
 
 
     connect(&server, &QTcpServer::newConnection, this, &DebugServer::newConnection);
@@ -37,6 +37,12 @@ void DebugServer::disconnected() {
     socket->deleteLater();
 }
 
+std::string matrixToStr(const Eigen::MatrixXd& mat){
+    std::stringstream ss;
+    ss << mat;
+    return ss.str();
+}
+
 std::string vectorToStr(const Eigen::VectorXd& vec){
     std::stringstream ss;
     ss << vec;
@@ -49,16 +55,18 @@ void DebugServer::readyRead() {
 //    qInfo() << "Ready Read" << socket;
     QString received = QString::fromUtf8( socket->readAll() );
 
+//    qInfo() << received;
+
     QStringList splitData = received.split('|');
 
     for(int k = 0; k < splitData.size(); k++) {
 
         QStringList receivedArr = splitData[k].split(':');
+        int code = receivedArr[0].toUInt();
 
-        if(receivedArr[0].toUInt() == 10) {
-    //        qInfo() << "Measurement State Vector";
-    //        qInfo() << receivedArr[1];
-    //        qInfo() << receivedArr[2];
+//        std::cout << code << std::endl;
+
+        if(code == 10) {
 
             QStringList dim = receivedArr[1].split(',');
             QStringList items = receivedArr[2].split(',');
@@ -70,13 +78,7 @@ void DebugServer::readyRead() {
 
             recvMeasurement = new VectorXd(measurement);
 
-    //        std::cout << "Measurement State Vector: \r\n" << measurement << std::endl;
-//            socket->write("OK\r\n", 4);
-
-        } else if(receivedArr[0].toUInt() == 11) {
-    //        qInfo() << "Prediction State Vector";
-    //        qInfo() << receivedArr[1];
-    //        qInfo() << receivedArr[2];
+        } else if(code == 11) {
 
             QStringList dim = receivedArr[1].split(',');
             QStringList items = receivedArr[2].split(',');
@@ -88,13 +90,7 @@ void DebugServer::readyRead() {
 
             recvX = new VectorXd(predState);
 
-    //        std::cout << "Prediction State Vector: \r\n" << predState << std::endl;
-//            socket->write("OK\r\n", 4);
-
-        } else if(receivedArr[0].toUInt() == 12) {
-    //        qInfo() << "Prediction Covar";
-    //        qInfo() << receivedArr[1];
-    //        qInfo() << receivedArr[2];
+        } else if(code == 12) {
 
             QStringList dim = receivedArr[1].split(',');
             QStringList items = receivedArr[2].split(',');
@@ -108,13 +104,7 @@ void DebugServer::readyRead() {
 
             recvP = new MatrixXd(predCov);
 
-    //        std::cout << "Prediction Cov: \r\n" << predCov << std::endl;
-//            socket->write("OK\r\n", 4);
-
-        } else if(receivedArr[0].toUInt() == 13) {
-    //        qInfo() << "Measurement Prediction State Vector";
-    //        qInfo() << receivedArr[1];
-    //        qInfo() << receivedArr[2];
+        } else if(code == 13) {
 
             QStringList dim = receivedArr[1].split(',');
             QStringList items = receivedArr[2].split(',');
@@ -126,13 +116,7 @@ void DebugServer::readyRead() {
 
             recvXPredMeas = new VectorXd(measurementPredState);
 
-    //        std::cout << "Measurement Prediction State Vector: \r\n" << measurementPredState << std::endl;
-//            socket->write("OK\r\n", 4);
-
-        } else if(receivedArr[0].toUInt() == 14) {
-    //        qInfo() << "Measurement Prediction Covar";
-    //        qInfo() << receivedArr[1];
-    //        qInfo() << receivedArr[2];
+        } else if(code == 14) {
 
             QStringList dim = receivedArr[1].split(',');
             QStringList items = receivedArr[2].split(',');
@@ -146,13 +130,7 @@ void DebugServer::readyRead() {
 
             recvPPredMeas = new MatrixXd(measurementPredCov);
 
-    //        std::cout << "Measurement Prediction Covar: \r\n" << measurementPredCov << std::endl;
-//            socket->write("OK\r\n", 4);
-
-        } else if(receivedArr[0].toUInt() == 15) {
-    //        qInfo() << "Measurement Prediction CrossCovar";
-    //        qInfo() << receivedArr[1];
-    //        qInfo() << receivedArr[2];
+        } else if(code == 15) {
 
             QStringList dim = receivedArr[1].split(',');
             QStringList items = receivedArr[2].split(',');
@@ -166,18 +144,66 @@ void DebugServer::readyRead() {
 
             recvCrossCov = new MatrixXd(measurementPredCrossCovar);
 
-    //        std::cout << "Measurement Prediction CrossCovar: \r\n" << measurementPredCrossCovar << std::endl;
-//            socket->write("OK\r\n", 4);
+        } else if(code == 20) {
 
-        } else if(receivedArr[0].toInt() == 80) {
+            QStringList dim = receivedArr[1].split(',');
+            QStringList items = receivedArr[2].split(',');
 
+            VectorXd predState(dim[0].toUInt());
+            for(int i = 0; i < predState.size(); i++) {
+                predState[i] = items[i].toFloat();
+            }
+
+            recvX = new VectorXd(predState);
+//            std::cout << "x: " << *recvX << std::endl;
+
+        } else if(code == 21) {
+
+            QStringList dim = receivedArr[1].split(',');
+            QStringList items = receivedArr[2].split(',');
+
+            MatrixXd predCov(dim[0].toUInt(), dim[1].toUInt());
+            for(int i = 0; i < predCov.rows(); i++) {
+                for(int j = 0; j < predCov.cols(); j++) {
+                    predCov(i, j) = items[ (i*dim[1].toUInt())  + j].toFloat();
+                }
+            }
+
+            recvP = new MatrixXd(predCov);
+//            std::cout << "P: " << *recvP << std::endl;
+
+        } else if(code == 22) {
+
+//            qInfo() << receivedArr;
+            recvMeasurements = new QList<VectorXd *>();
+            for(int i = 1; i < receivedArr.size(); i+=3) {
+                if(receivedArr[i].toUInt() == 23) {
+
+                    QStringList dim = receivedArr[i+1].split(',');
+                    QStringList items = receivedArr[i+2].split(',');
+
+                    VectorXd *measurement = new VectorXd(dim[0].toUInt());
+                    for(int j = 0; j < (*measurement).size(); j++) {
+                        (*measurement)[j] = items[j].toFloat();
+                    }
+                    recvMeasurements->append(measurement);
+                }
+            }
+
+//            for(int i = 0; i < (*recvMeasurements).size(); i++) {
+//                VectorXd *measurement = (*recvMeasurements)[i];
+//                std::cout << *measurement << std::endl;
+//                std::cout << "----" << std::endl;
+//            }
+        } else if(code == 24) {
+            dt = receivedArr[1].toUInt();
+        }
+
+        else if(code == 80) {
 
             StateGaussian state(recvX, recvP);
-
             StateGaussian recvStateMeasurement(recvXPredMeas, recvPPredMeas);
-
             MeasurementPrediction measurementPrediction(&recvStateMeasurement, nullptr, nullptr, recvCrossCov);
-
             TransitionLinearGaussian *transitionLinearGaussian = new TransitionLinearGaussian(0.005);
 
             KalmanFilter *kalman = new KalmanFilter(measurementModel, transitionLinearGaussian);
@@ -188,13 +214,101 @@ void DebugServer::readyRead() {
             std::cout << posteriorState->getP() << std::endl;
             std::cout << "--------------" << std::endl;
 
-//            socket->write("OK\r\n", 4);
-            socket->write(vectorToStr(posteriorState->getX()).c_str(), vectorToStr(posteriorState->getX()).length() );
+            QString response = QString("%1 | %2").arg(QString::fromStdString(vectorToStr(posteriorState->getX())),
+                                                      QString::fromStdString(matrixToStr(posteriorState->getP())) );
+            socket->write(  response.toStdString().c_str(),
+                            response.length() );
+        } else if(code == 81) {
+
+            TransitionLinearGaussian *transitionLinearGaussian = new TransitionLinearGaussian(0.005);
+
+            KalmanFilter *kalman = new KalmanFilter(measurementModel, transitionLinearGaussian);
+
+            StateGaussian prior(recvX, recvP);
+
+            State *posterior = kalman->predict(prior, dt);
+            std::cout << posterior->getX() << std::endl;
+            std::cout << "---------------" << std::endl;
+            std::cout << posterior->getP() << std::endl;
+            std::cout << "---------------" << std::endl;
+            std::cout << "---------------" << std::endl;
+            std::cout << "---------------" << std::endl;
+
+        } else if(code == 82) {
+
+            TransitionLinearGaussian *transitionLinearGaussian = new TransitionLinearGaussian(0.005);
+
+            KalmanFilter *kalman = new KalmanFilter(measurementModel, transitionLinearGaussian);
+
+            StateGaussian prior(recvX, recvP);
+
+            State *posterior = kalman->predict(prior, dt);
+            MeasurementPrediction *meas = kalman->predictMeasurement(posterior);
+
+            std::cout << meas->state->getX() << std::endl;
+//            std::cout << "---------------" << std::endl;
+//            std::cout << meas->state->getP() << std::endl;
+//            std::cout << "---------------" << std::endl;
+//            std::cout << *meas->crossCov << std::endl;
+//            std::cout << "---------------" << std::endl;
+//            std::cout << *meas->innovationCov << std::endl;
+//            std::cout << "---------------" << std::endl;
+//            std::cout << "---------------" << std::endl;
+//            std::cout << "---------------" << std::endl;
+
+        } else if(code == 83) {
+
+            TransitionLinearGaussian *transitionLinearGaussian = new TransitionLinearGaussian(0.005);
+            KalmanFilter *kalman = new KalmanFilter(measurementModel, transitionLinearGaussian);
+            StateGaussian prior(recvX, recvP);
+            State *posterior = kalman->predict(prior, dt);
+            MeasurementPrediction *meas = kalman->predictMeasurement(posterior);
+
+//            std::cout << recvMeasurements->length() << std::endl;
+            PDA pda;
+            for(int i = 0; i < recvMeasurements->length(); i++) {
+//                std::cout << "recvMeasurements " << *(*recvMeasurements)[i] << std::endl;
+//                std::cout << "meas->state->getX() " << *meas->predMeas << std::endl; ////////
+//                std::cout << "meas->innovationCov)" << *meas->innovationCov << std::endl;
+                std::cout << "log pdf: " << pda.logPDF(*(*recvMeasurements)[i], *meas->predMeas, *meas->innovationCov) << std::endl;
+//                std::cout << *(*recvMeasurements)[i] << std::endl;
+            }
+            std::cout << "--------------" << std::endl;
+
+        } else if(code == 84) {
+
+            TransitionLinearGaussian *transitionLinearGaussian = new TransitionLinearGaussian(0.005);
+            KalmanFilter *kalman = new KalmanFilter(measurementModel, transitionLinearGaussian);
+            StateGaussian prior(recvX, recvP);
+            State *posterior = kalman->predict(prior, dt);
+            MeasurementPrediction *meas = kalman->predictMeasurement(posterior);
+
+            PDA pda(0.125, 0.9);
+
+            QList<SingleHypothesis *> list;
+            SingleHypothesis *singl = new SingleHypothesis(nullptr, nullptr, nullptr, nullptr, 1 - pda.P_D*pda.P_G);
+            list.append(singl);
+
+            for(int i = 0; i < recvMeasurements->length(); i++) {
+                double log_pdf = pda.logPDF(*(*recvMeasurements)[i], *meas->predMeas, *meas->innovationCov);
+                double probability = pda.getProbability(log_pdf);
+                std::cout << probability << std::endl;
+                SingleHypothesis *singl = new SingleHypothesis(nullptr, nullptr, nullptr, nullptr, probability);
+                list.append(singl);
+//                std::cout << *(*recvMeasurements)[i] << std::endl;
+            }
+            MultiHypothesis multi(&list);
+            multi.normalizeWeights();
+
+            for(int i = 0; i < multi.items->length(); i++) {
+               std::cout << "normal probability: " << multi.items->at(i)->probability << std::endl;
+            }
+            std::cout << std::endl;
+
         }
 
     }
 
-//    socket->write("OK\r\n", 4);
 }
 
 

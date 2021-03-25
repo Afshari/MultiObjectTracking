@@ -15,7 +15,7 @@ void TestPDA::testLogPDF() {
     VectorXd xMeasPred(2);
     xMeasPred << 0, 0;
 
-    MatrixXd PMeasPred(2, 2);
+    MatrixXd PMeasPred(2, 2); // innovation Cov
     PMeasPred << 2.25, 0.,
                  0.,   2.25;
 

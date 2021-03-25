@@ -16,6 +16,9 @@
 #include "measurementlineargaussian.h"
 #include "kalmanfilter.h"
 #include "transitionlineargaussian.h"
+#include "pda.h"
+#include "singlehypothesis.h"
+#include "multihypothesis.h"
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
@@ -35,12 +38,15 @@ public slots:
 
 
 private:
+    int dt = 0;
+
     VectorXd *recvX;
     MatrixXd *recvP;
     VectorXd *recvXPredMeas;
     MatrixXd *recvPPredMeas;
     MatrixXd *recvCrossCov;
     VectorXd *recvMeasurement;
+    QList<VectorXd *> *recvMeasurements;
 
     MeasurementLinearGaussian *measurementModel;
 
