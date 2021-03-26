@@ -293,7 +293,7 @@ void TestKalmanFilter::testUpdate1() {
     MatrixXd upsilon(4, 2);
     upsilon << 1.5, 0., 0. , 0., 0. , 1.5, 0. , 0.;
 
-    MeasurementPrediction measurementPrediction(&stateMeasurement, nullptr, nullptr, &upsilon);
+    MeasurementPrediction measurementPrediction(&stateMeasurement, nullptr, nullptr, nullptr, &upsilon);
 
 
     State* posteriorState = kalman->update(state, measurementModel, measurement, measurementPrediction);

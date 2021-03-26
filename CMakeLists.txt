@@ -33,6 +33,7 @@ add_executable(MultiObjectTracking
   measurementmodel.cpp
   measurementprediction.cpp
   measurementlineargaussian.cpp
+  estimator.cpp
   kalmanfilter.cpp
   associator.cpp
   pda.cpp

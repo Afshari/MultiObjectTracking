@@ -19,7 +19,7 @@ void TestPDA::testLogPDF() {
     PMeasPred << 2.25, 0.,
                  0.,   2.25;
 
-    PDA pda;
+    PDA pda(nullptr);
 
     QVERIFY2( qAbs( pda.logPDF(xDetection, xMeasPred, PMeasPred) - ref ) <= 1e-4, "");
 }
@@ -27,7 +27,7 @@ void TestPDA::testLogPDF() {
 void TestPDA::testToPDF() {
 
     double ref = 0.06659800182665002;
-    PDA pda;
+    PDA pda(nullptr);
 
     QVERIFY2( qAbs( pda.toPDF(-2.7090807044887333) - ref ) <= 1e-5, "");
 }
@@ -36,7 +36,7 @@ void TestPDA::testGetProbability() {
 
     double ref = 0.0003904373547700659;
 
-    PDA pda(0.125, 0.9);
+    PDA pda(nullptr, 0.125, 0.9);
 
     QVERIFY2( qAbs( pda.getProbability(-9.82232405069974) - ref ) <= 1e-6, "");
 }

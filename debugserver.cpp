@@ -175,18 +175,20 @@ void DebugServer::readyRead() {
         } else if(code == 22) {
 
 //            qInfo() << receivedArr;
-            recvMeasurements = new QList<VectorXd *>();
+            recvMeasurements = new QList<Detection *>();
             for(int i = 1; i < receivedArr.size(); i+=3) {
                 if(receivedArr[i].toUInt() == 23) {
 
                     QStringList dim = receivedArr[i+1].split(',');
                     QStringList items = receivedArr[i+2].split(',');
 
+                    Detection *detection = new Detection(Detection::DetectionType::detect);
                     VectorXd *measurement = new VectorXd(dim[0].toUInt());
                     for(int j = 0; j < (*measurement).size(); j++) {
                         (*measurement)[j] = items[j].toFloat();
                     }
-                    recvMeasurements->append(measurement);
+                    detection->x = measurement;
+                    recvMeasurements->append(detection);
                 }
             }
 
@@ -203,7 +205,7 @@ void DebugServer::readyRead() {
 
             StateGaussian state(recvX, recvP);
             StateGaussian recvStateMeasurement(recvXPredMeas, recvPPredMeas);
-            MeasurementPrediction measurementPrediction(&recvStateMeasurement, nullptr, nullptr, recvUpsilon);
+            MeasurementPrediction measurementPrediction(&recvStateMeasurement, nullptr, nullptr, nullptr, recvUpsilon);
             TransitionLinearGaussian *transitionLinearGaussian = new TransitionLinearGaussian(0.005);
 
             KalmanFilter *kalman = new KalmanFilter(measurementModel, transitionLinearGaussian);
@@ -226,10 +228,10 @@ void DebugServer::readyRead() {
 
             StateGaussian prior(recvX, recvP);
 
-            State *posterior = kalman->predict(prior, dt);
-            std::cout << posterior->getX() << std::endl;
+            State *predicted = kalman->predict(prior, dt);
+            std::cout << predicted->getX() << std::endl;
             std::cout << "---------------" << std::endl;
-            std::cout << posterior->getP() << std::endl;
+            std::cout << predicted->getP() << std::endl;
             std::cout << "---------------" << std::endl;
             std::cout << "---------------" << std::endl;
             std::cout << "---------------" << std::endl;
@@ -242,13 +244,20 @@ void DebugServer::readyRead() {
 
             StateGaussian prior(recvX, recvP);
 
-            State *posterior = kalman->predict(prior, dt);
-            MeasurementPrediction *meas = kalman->predictMeasurement(posterior);
+            State *predicted = kalman->predict(prior, dt);
+            MeasurementPrediction *meas = kalman->predictMeasurement(predicted);
 
-            std::cout << meas->state->getX() << std::endl;
-//            std::cout << "---------------" << std::endl;
+            std::cout << "---Predicted x------------" << std::endl;
+            std::cout << predicted->getX() << std::endl;
+            std::cout << "---Predicted Measurement x------------" << std::endl;
+            std::cout << *meas->xOfZPred << std::endl;
+//            std::cout << "---Predicted P------------" << std::endl;
+//            std::cout << predicted->getP() << std::endl;
+            std::cout << "---Measurement x------------" << std::endl;
+            std::cout << meas->statePred->getX() << std::endl;
+//            std::cout << "---Measurement P------------" << std::endl;
 //            std::cout << meas->state->getP() << std::endl;
-//            std::cout << "---------------" << std::endl;
+            std::cout << "---------------" << std::endl;
 //            std::cout << *meas->upsilon << std::endl;
 //            std::cout << "---------------" << std::endl;
 //            std::cout << *meas->S << std::endl;
@@ -261,16 +270,16 @@ void DebugServer::readyRead() {
             TransitionLinearGaussian *transitionLinearGaussian = new TransitionLinearGaussian(0.005);
             KalmanFilter *kalman = new KalmanFilter(measurementModel, transitionLinearGaussian);
             StateGaussian prior(recvX, recvP);
-            State *posterior = kalman->predict(prior, dt);
-            MeasurementPrediction *meas = kalman->predictMeasurement(posterior);
+            State *predicted = kalman->predict(prior, dt);
+            MeasurementPrediction *meas = kalman->predictMeasurement(predicted);
 
 //            std::cout << recvMeasurements->length() << std::endl;
-            PDA pda;
+            PDA pda(kalman);
             for(int i = 0; i < recvMeasurements->length(); i++) {
 //                std::cout << "recvMeasurements " << *(*recvMeasurements)[i] << std::endl;
-//                std::cout << "meas->state->getX() " << *meas->zPred << std::endl; ////////
+//                std::cout << "meas->state->getX() " << *meas->zPred << std::endl;
 //                std::cout << "meas->S)" << *meas->S << std::endl;
-                std::cout << "log pdf: " << pda.logPDF(*(*recvMeasurements)[i], *meas->zPred, *meas->S) << std::endl;
+                std::cout << "log pdf: " << pda.logPDF(*(*recvMeasurements)[i]->x, *meas->zPred, *meas->S) << std::endl;
 //                std::cout << *(*recvMeasurements)[i] << std::endl;
             }
             std::cout << "--------------" << std::endl;
@@ -280,30 +289,37 @@ void DebugServer::readyRead() {
             TransitionLinearGaussian *transitionLinearGaussian = new TransitionLinearGaussian(0.005);
             KalmanFilter *kalman = new KalmanFilter(measurementModel, transitionLinearGaussian);
             StateGaussian prior(recvX, recvP);
-            State *posterior = kalman->predict(prior, dt);
-            MeasurementPrediction *meas = kalman->predictMeasurement(posterior);
+            State *predicted = kalman->predict(prior, dt);
+            MeasurementPrediction *meas = kalman->predictMeasurement(predicted);
 
-            PDA pda(0.125, 0.9);
+            PDA pda(kalman, 0.125, 0.9);
 
             QList<SingleHypothesis *> list;
-            SingleHypothesis *singl = new SingleHypothesis(nullptr, nullptr, nullptr, nullptr, 1 - pda.P_D*pda.P_G);
+            Detection *missDetection = new Detection(Detection::DetectionType::miss);
+            SingleHypothesis *singl = new SingleHypothesis(missDetection, predicted, transitionLinearGaussian,
+                                                           nullptr, 1 - pda.P_D*pda.P_G);
             list.append(singl);
 
+//            std::cout << "x Pred: \r\n" << meas->statePred->getX() << std::endl;
+//            std::cout << "predic: \r\n" << predicted->getX() << std::endl;
+
             for(int i = 0; i < recvMeasurements->length(); i++) {
-                double log_pdf = pda.logPDF(*(*recvMeasurements)[i], *meas->zPred, *meas->S);
+
+                double log_pdf = pda.logPDF(*(*recvMeasurements)[i]->x, *meas->zPred, *meas->S);
                 double probability = pda.getProbability(log_pdf);
-                std::cout << probability << std::endl;
-                SingleHypothesis *singl = new SingleHypothesis(nullptr, nullptr, nullptr, nullptr, probability);
+//                std::cout << probability << std::endl;
+                SingleHypothesis *singl = new SingleHypothesis((*recvMeasurements)[i], nullptr, transitionLinearGaussian,
+                                                               meas, probability);
                 list.append(singl);
 //                std::cout << *(*recvMeasurements)[i] << std::endl;
             }
             MultiHypothesis multi(&list);
             multi.normalizeWeights();
 
-            for(int i = 0; i < multi.items->length(); i++) {
-               std::cout << "normal probability: " << multi.items->at(i)->probability << std::endl;
-            }
-            std::cout << std::endl;
+//            for(int i = 0; i < multi.items->length(); i++) {
+//               std::cout << "normal probability: " << multi.items->at(i)->probability << std::endl;
+//            }
+//            std::cout << std::endl;
 
         }
 

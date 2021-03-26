@@ -15,18 +15,19 @@ using Eigen::VectorXd;
 #include "transitionlineargaussian.h"
 #include "state.h"
 #include "stategaussian.h"
+#include "estimator.h"
 
 
-class KalmanFilter : public QObject
+class KalmanFilter : public Estimator
 {
     Q_OBJECT
 public:
-    explicit KalmanFilter(MeasurementModel *measurementModel, TransitionModel *transitionModel,
-                          QObject *parent = nullptr);
+    explicit KalmanFilter(MeasurementModel *measurementModel, TransitionModel *transitionModel);
 
-    State* predict(const State &prior, int dt);
-    State* update(const State &state, const MeasurementModel &measurementModel,
-                 const VectorXd &measurement, const MeasurementPrediction &measurementPrediction);
+    virtual State* predict(const State &prior, int dt) override;
+    virtual State* update(const State &state, const MeasurementModel &measurementModel,
+                          const VectorXd &measurement, const MeasurementPrediction &measurementPrediction) override;
+    virtual MeasurementPrediction *predictMeasurement(State *predState) override;
 
     friend class TestKalmanFilter;
     friend class DebugServer;
@@ -38,8 +39,8 @@ private:
 //    VectorXd xPosterior;
 //    VectorXd pPosterior;
 
-    MeasurementModel *measurementModel;
-    TransitionModel  *transitionModel;
+//    MeasurementModel *measurementModel;
+//    TransitionModel  *transitionModel;
 
     VectorXd xPredict(const State &prior, int dt);
     MatrixXd PPredict(const State &prior, int dt);
@@ -47,7 +48,7 @@ private:
     MatrixXd K(const MatrixXd &upsilon, const MatrixXd &predictCov);
     MatrixXd PUpdate(const MatrixXd &gain, const MatrixXd &pPred, const MatrixXd &pMeas);
     MatrixXd xUpdate(const VectorXd &xPred, const MatrixXd &gain, const VectorXd &xMeas, const VectorXd &xMeasPred);
-    MeasurementPrediction *predictMeasurement(State *predState);
+
 
 
 signals:

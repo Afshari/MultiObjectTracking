@@ -1,9 +1,10 @@
 #include "measurementprediction.h"
 
-MeasurementPrediction::MeasurementPrediction(State *predState, VectorXd *zPred, MatrixXd *S,
+MeasurementPrediction::MeasurementPrediction(State *statePred, VectorXd* xzPred, VectorXd *zPred, MatrixXd *S,
                                              MatrixXd *upsilon,QObject *parent) : QObject(parent) {
 
-    this->state = predState;
+    this->statePred = statePred;
+    this->xOfZPred = xzPred;
     this->zPred = zPred;
     this->S = S;
     this->upsilon = upsilon;

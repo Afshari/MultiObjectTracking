@@ -12,10 +12,15 @@ class Detection : public QObject
 {
     Q_OBJECT
 public:
-    explicit Detection(QObject *parent = nullptr);
+    enum DetectionType { miss, detect };
+
+    explicit Detection(Detection::DetectionType type, QObject *parent = nullptr);
 
     MeasurementModel measurementModel;
-    VectorXd x;
+    VectorXd *x;
+
+
+    DetectionType type;
 
 signals:
 

@@ -25,7 +25,7 @@ using Eigen::VectorXd;
 #define RUN_DEBUG   2
 #define RUN_APP     3
 
-#define RUN_STATUS  RUN_TEST
+#define RUN_STATUS  RUN_DEBUG
 
 int main(int argc, char *argv[])
 {

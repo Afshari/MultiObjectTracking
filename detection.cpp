@@ -1,5 +1,6 @@
 #include "detection.h"
 
-Detection::Detection(QObject *parent) : QObject(parent) {
+Detection::Detection(Detection::DetectionType type, QObject *parent) : QObject(parent) {
 
+    this->type = type;
 }

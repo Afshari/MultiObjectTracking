@@ -19,6 +19,7 @@
 #include "pda.h"
 #include "singlehypothesis.h"
 #include "multihypothesis.h"
+#include "detection.h"
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
@@ -46,7 +47,7 @@ private:
     MatrixXd *recvPPredMeas;
     MatrixXd *recvUpsilon;
     VectorXd *recvMeasurement;
-    QList<VectorXd *> *recvMeasurements;
+    QList<Detection *> *recvMeasurements;
 
     MeasurementLinearGaussian *measurementModel;
 

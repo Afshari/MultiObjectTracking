@@ -16,7 +16,7 @@ public:
     friend class TestMultiHypothesis;
     friend class DebugServer;
 
-protected:
+public:
     void normalizeWeights();
 
 signals:

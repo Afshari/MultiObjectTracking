@@ -1,15 +1,51 @@
 #include "pda.h"
 
-PDA::PDA(float spatialClutterIntensity, float P_D , float P_G) : Associator(spatialClutterIntensity, P_D, P_G) {
+PDA::PDA(Estimator *estimator, float spatialClutterIntensity, float P_D , float P_G) :
+    Associator(estimator, spatialClutterIntensity, P_D, P_G) {
 
 }
-void PDA::associate() {
+QList<MultiHypothesis *> * PDA::associate(const QList<State *> &objects, const QList<Detection *> &detections, int dt) {
 
+    QList<MultiHypothesis *> *lst = new QList<MultiHypothesis *>();
+    for(int i = 0; i < objects.length(); i++) {
+        lst->append(hypothesis(objects.at(i), detections, dt));
+    }
+
+    return lst;
 }
 
-void PDA::hypothesis(const State &state, const QList<Detection *> &detections) {
+MultiHypothesis * PDA::hypothesis(State *prior, const QList<Detection *> &detections, int dt) {
 
-//    std::cout << detections[0].x << std::endl;
+//    StateGaussian prior(recvX, recvP);
+    State *predicted = estimator->predict(*prior, dt);
+    MeasurementPrediction *meas = estimator->predictMeasurement(predicted);
+
+    QList<SingleHypothesis *> list;
+    Detection *missDetection = new Detection(Detection::DetectionType::miss);
+    SingleHypothesis *single = new SingleHypothesis(missDetection, predicted,
+                                                    this->estimator->transitionModel,
+                                                   nullptr, 1 - this->P_D * this->P_G);
+    list.append(single);
+
+//    std::cout << "x Pred: \r\n" << meas->statePred->getX() << std::endl;
+//    std::cout << "predic: \r\n" << predicted->getX() << std::endl;
+
+    for(int i = 0; i < detections.length(); i++) {
+
+        double log_pdf = this->logPDF(*detections[i]->x, *meas->zPred, *meas->S);
+        double probability = this->getProbability(log_pdf);
+//                std::cout << probability << std::endl;
+        SingleHypothesis *single = new SingleHypothesis(detections[i], nullptr,
+                                                       this->estimator->transitionModel,
+                                                       meas, probability);
+        list.append(single);
+//                std::cout << *(*recvMeasurements)[i] << std::endl;
+    }
+
+    MultiHypothesis *multi = new MultiHypothesis(&list);
+    multi->normalizeWeights();
+
+    return multi;
 }
 
 double PDA::logPDF(const VectorXd &xDetection, const VectorXd &xMeasPred, const MatrixXd &PMeasPred) {
