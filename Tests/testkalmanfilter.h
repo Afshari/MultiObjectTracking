@@ -28,8 +28,8 @@ private slots:
     void testPPredictDt0();
     void testPPredictDt1();
 
-    void testKalmanGain1();
-    void testKalmanGain2();
+    void testK1();
+    void testK2();
 
     void testPUpdate1();
     void testPUpdate2();

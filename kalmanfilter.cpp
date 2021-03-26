@@ -20,8 +20,8 @@ State* KalmanFilter::predict(const State &prior, int dt) {
 State* KalmanFilter::update(const State &state, const MeasurementModel &measurementModel,
                           const VectorXd &measurement, const MeasurementPrediction &measurementPrediction) {
 
-    MatrixXd crossCov = this->measurementModel->crossCov(state.getP());
-    MatrixXd gain = kalmanGain(crossCov, measurementPrediction.state->getP());
+    MatrixXd upsilon = this->measurementModel->upsilon(state.getP());
+    MatrixXd gain = K(upsilon, measurementPrediction.state->getP());
     MatrixXd* P = new MatrixXd( this->PUpdate(gain, state.getP(), measurementPrediction.state->getP()) );
 
     VectorXd* x = new VectorXd( state.getX() + gain * (measurement - measurementPrediction.state->getX()) );
@@ -39,9 +39,9 @@ MatrixXd KalmanFilter::PPredict(const State &prior, int dt) {
             transitionModel->transitionCov(dt);
 }
 
-MatrixXd KalmanFilter::kalmanGain(const MatrixXd &crossCov, const MatrixXd &predictCov) {
+MatrixXd KalmanFilter::K(const MatrixXd &upsilon, const MatrixXd &predictCov) {
 
-    return crossCov * predictCov.inverse();
+    return upsilon * predictCov.inverse();
 }
 
 MatrixXd KalmanFilter::PUpdate(const MatrixXd &gain, const MatrixXd &pPred, const MatrixXd &pMeas) {
@@ -56,18 +56,18 @@ MatrixXd KalmanFilter::xUpdate(const VectorXd &xPred, const MatrixXd &gain, cons
 
 MeasurementPrediction* KalmanFilter::predictMeasurement(State *predState) {
 
-    VectorXd *predMeas = new VectorXd(measurementModel->h(predState->getX()));
-//    std::cout << *predMeas << std::endl;
+    VectorXd *zPred = new VectorXd(measurementModel->h(predState->getX()));
+//    std::cout << *zPred << std::endl;
 //    std::cout << "----------" << std::endl;
 //    MatrixXd H = measurementModel->H();
-    MatrixXd *crossCov = new MatrixXd(measurementModel->crossCov(predState->getP()));
-//    std::cout << *crossCov << std::endl;
+    MatrixXd *upsilon = new MatrixXd(measurementModel->upsilon(predState->getP()));
+//    std::cout << *upsilon << std::endl;
 //    std::cout << "----------" << std::endl;
-    MatrixXd *innovCov = new MatrixXd(measurementModel->innovationCov(*crossCov));
-//    std::cout << *innovCov << std::endl;
+    MatrixXd *S = new MatrixXd(measurementModel->S(*upsilon));
+//    std::cout << *S << std::endl;
 //    std::cout << "----------" << std::endl;
 
-    return new MeasurementPrediction(predState, predMeas, innovCov, crossCov);
+    return new MeasurementPrediction(predState, zPred, S, upsilon);
 }
 
 

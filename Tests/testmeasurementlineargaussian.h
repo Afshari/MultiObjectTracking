@@ -17,8 +17,8 @@ private:
 
 private slots:
     void initTestCase();
-    void testInnovationCov();
-    void testCrossCov();
+    void testS();
+    void testUpsilon();
     void testh();
 
 

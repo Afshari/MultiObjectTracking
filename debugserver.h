@@ -44,7 +44,7 @@ private:
     MatrixXd *recvP;
     VectorXd *recvXPredMeas;
     MatrixXd *recvPPredMeas;
-    MatrixXd *recvCrossCov;
+    MatrixXd *recvUpsilon;
     VectorXd *recvMeasurement;
     QList<VectorXd *> *recvMeasurements;
 

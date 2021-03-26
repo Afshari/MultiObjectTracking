@@ -135,14 +135,14 @@ void DebugServer::readyRead() {
             QStringList dim = receivedArr[1].split(',');
             QStringList items = receivedArr[2].split(',');
 
-            MatrixXd measurementPredCrossCovar(dim[0].toUInt(), dim[1].toUInt());
-            for(int i = 0; i < measurementPredCrossCovar.rows(); i++) {
-                for(int j = 0; j < measurementPredCrossCovar.cols(); j++) {
-                    measurementPredCrossCovar(i, j) = items[ (i*dim[1].toUInt())  + j].toFloat();
+            MatrixXd upsilon(dim[0].toUInt(), dim[1].toUInt());
+            for(int i = 0; i < upsilon.rows(); i++) {
+                for(int j = 0; j < upsilon.cols(); j++) {
+                    upsilon(i, j) = items[ (i*dim[1].toUInt())  + j].toFloat();
                 }
             }
 
-            recvCrossCov = new MatrixXd(measurementPredCrossCovar);
+            recvUpsilon = new MatrixXd(upsilon);
 
         } else if(code == 20) {
 
@@ -203,7 +203,7 @@ void DebugServer::readyRead() {
 
             StateGaussian state(recvX, recvP);
             StateGaussian recvStateMeasurement(recvXPredMeas, recvPPredMeas);
-            MeasurementPrediction measurementPrediction(&recvStateMeasurement, nullptr, nullptr, recvCrossCov);
+            MeasurementPrediction measurementPrediction(&recvStateMeasurement, nullptr, nullptr, recvUpsilon);
             TransitionLinearGaussian *transitionLinearGaussian = new TransitionLinearGaussian(0.005);
 
             KalmanFilter *kalman = new KalmanFilter(measurementModel, transitionLinearGaussian);
@@ -249,9 +249,9 @@ void DebugServer::readyRead() {
 //            std::cout << "---------------" << std::endl;
 //            std::cout << meas->state->getP() << std::endl;
 //            std::cout << "---------------" << std::endl;
-//            std::cout << *meas->crossCov << std::endl;
+//            std::cout << *meas->upsilon << std::endl;
 //            std::cout << "---------------" << std::endl;
-//            std::cout << *meas->innovationCov << std::endl;
+//            std::cout << *meas->S << std::endl;
 //            std::cout << "---------------" << std::endl;
 //            std::cout << "---------------" << std::endl;
 //            std::cout << "---------------" << std::endl;
@@ -268,9 +268,9 @@ void DebugServer::readyRead() {
             PDA pda;
             for(int i = 0; i < recvMeasurements->length(); i++) {
 //                std::cout << "recvMeasurements " << *(*recvMeasurements)[i] << std::endl;
-//                std::cout << "meas->state->getX() " << *meas->predMeas << std::endl; ////////
-//                std::cout << "meas->innovationCov)" << *meas->innovationCov << std::endl;
-                std::cout << "log pdf: " << pda.logPDF(*(*recvMeasurements)[i], *meas->predMeas, *meas->innovationCov) << std::endl;
+//                std::cout << "meas->state->getX() " << *meas->zPred << std::endl; ////////
+//                std::cout << "meas->S)" << *meas->S << std::endl;
+                std::cout << "log pdf: " << pda.logPDF(*(*recvMeasurements)[i], *meas->zPred, *meas->S) << std::endl;
 //                std::cout << *(*recvMeasurements)[i] << std::endl;
             }
             std::cout << "--------------" << std::endl;
@@ -290,7 +290,7 @@ void DebugServer::readyRead() {
             list.append(singl);
 
             for(int i = 0; i < recvMeasurements->length(); i++) {
-                double log_pdf = pda.logPDF(*(*recvMeasurements)[i], *meas->predMeas, *meas->innovationCov);
+                double log_pdf = pda.logPDF(*(*recvMeasurements)[i], *meas->zPred, *meas->S);
                 double probability = pda.getProbability(log_pdf);
                 std::cout << probability << std::endl;
                 SingleHypothesis *singl = new SingleHypothesis(nullptr, nullptr, nullptr, nullptr, probability);

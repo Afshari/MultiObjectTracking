@@ -13,13 +13,13 @@ class MeasurementPrediction : public QObject
 {
     Q_OBJECT
 public:
-    explicit MeasurementPrediction(State *state, VectorXd *predMeas, MatrixXd *innovationCov,
-                MatrixXd *crossCov, QObject *parent = nullptr);
+    explicit MeasurementPrediction(State *state, VectorXd *zPred, MatrixXd *S,
+                MatrixXd *upsilon, QObject *parent = nullptr);
 
-    State *state;
-    VectorXd *predMeas;
-    MatrixXd *innovationCov;
-    MatrixXd *crossCov;
+    State       *state;
+    VectorXd    *zPred;
+    MatrixXd    *S;
+    MatrixXd    *upsilon;
 
 
 private:

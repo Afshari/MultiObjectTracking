@@ -15,23 +15,23 @@ void TestMeasurementLinearGaussian::initTestCase() {
 }
 
 
-void TestMeasurementLinearGaussian::testInnovationCov() {
+void TestMeasurementLinearGaussian::testS() {
 
     MatrixXd ref(2, 2);
     ref << 1.92522955, 0.03433435,
            0.03433435, 1.92480954;
 
 
-    MatrixXd measCrossCov(4, 2);
-    measCrossCov << 1.17522955, 0.03433435,
+    MatrixXd upsilon(4, 2);
+    upsilon << 1.17522955, 0.03433435,
                     0.5025,     0.,
                     0.03433435, 1.17480954,
                     0.,         0.5025;
 
-    QVERIFY2(measure->innovationCov(measCrossCov).isApprox(ref, 1e-4), "Innovation Covariance Not Correct");
+    QVERIFY2(measure->S(upsilon).isApprox(ref, 1e-4), "Innovation Covariance Not Correct");
 }
 
-void TestMeasurementLinearGaussian::testCrossCov() {
+void TestMeasurementLinearGaussian::testUpsilon() {
 
     MatrixXd ref(4, 2);
     ref << 1.17522955, 0.03433435,
@@ -46,7 +46,7 @@ void TestMeasurementLinearGaussian::testCrossCov() {
                     0.03433435, 0.,         1.17480954, 0.5025,
                     0.,         0.,         0.5025,     0.505;
 
-    QVERIFY2(measure->crossCov(predCov).isApprox(ref, 1e-4), "Cross Covariance Not Correct");
+    QVERIFY2(measure->upsilon(predCov).isApprox(ref, 1e-4), "Cross Covariance Not Correct");
 }
 
 void TestMeasurementLinearGaussian::testh() {

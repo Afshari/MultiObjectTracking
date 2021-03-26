@@ -21,24 +21,36 @@
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
+#define RUN_TEST    1
+#define RUN_DEBUG   2
+#define RUN_APP     3
+
+#define RUN_STATUS  RUN_TEST
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
+#if RUN_STATUS == RUN_DEBUG
+
     DebugServer server;
     server.start();
 
-//    TestMeasurementLinearGaussian measurementLinearGaussian;
-//    QTest::qExec(&measurementLinearGaussian);
+#elif RUN_STATUS == RUN_TEST
 
-//    TestPDA testPDA;
-//    QTest::qExec(&testPDA);
+    TestMeasurementLinearGaussian measurementLinearGaussian;
+    QTest::qExec(&measurementLinearGaussian);
 
-//    TestMultiHypothesis testMultiHypothesis;
-//    QTest::qExec(&testMultiHypothesis);
+    TestPDA testPDA;
+    QTest::qExec(&testPDA);
 
-//    TestKalmanFilter kalmanFilter;
-//    QTest::qExec(&kalmanFilter);
+    TestMultiHypothesis testMultiHypothesis;
+    QTest::qExec(&testMultiHypothesis);
+
+    TestKalmanFilter kalmanFilter;
+    QTest::qExec(&kalmanFilter);
+
+#endif
 
     return a.exec();
 }

@@ -15,8 +15,8 @@ public:
     virtual MatrixXd H() { return MatrixXd(); }
     virtual VectorXd h(const VectorXd &state) { std::ignore = state; return VectorXd(); }
 
-    virtual MatrixXd innovationCov(const MatrixXd &measCrossCov) { std::ignore = measCrossCov; return MatrixXd(); }
-    virtual MatrixXd crossCov(const MatrixXd &predCov) { std::ignore = predCov; return MatrixXd(); }
+    virtual MatrixXd S(const MatrixXd &upsilon) { std::ignore = upsilon; return MatrixXd(); }
+    virtual MatrixXd upsilon(const MatrixXd &predCov) { std::ignore = predCov; return MatrixXd(); }
 
 protected:
     MatrixXd* measurementNoiseCovariance;

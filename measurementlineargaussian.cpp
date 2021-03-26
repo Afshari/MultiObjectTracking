@@ -20,15 +20,15 @@ VectorXd MeasurementLinearGaussian::h(const VectorXd &state) {
     return H() * state;
 }
 
-MatrixXd MeasurementLinearGaussian::innovationCov(const MatrixXd &measCrossCov) {
+MatrixXd MeasurementLinearGaussian::S(const MatrixXd &upsilon) {
 
 //    std::cout << "H: \r\n" << H() << std::endl;
-//    std::cout << "meas Cross Cov: \r\n" << measCrossCov << std::endl;
+//    std::cout << "meas Cross Cov: \r\n" << upsilon << std::endl;
 //    std::cout << "Noise Cov: \r\n" << (*measurementNoiseCovariance) << std::endl;
-    return H() * measCrossCov + (*measurementNoiseCovariance);
+    return H() * upsilon + (*measurementNoiseCovariance);
 }
 
-MatrixXd MeasurementLinearGaussian::crossCov(const MatrixXd &predCov) {
+MatrixXd MeasurementLinearGaussian::upsilon(const MatrixXd &predCov) {
     return predCov * H().transpose();
 }
 

@@ -32,11 +32,11 @@ public:
     friend class DebugServer;
 
 private:
-    VectorXd prior;
-    VectorXd xPred;
-    VectorXd pPred;
-    VectorXd xPosterior;
-    VectorXd pPosterior;
+//    VectorXd prior;
+//    VectorXd xPred;
+//    VectorXd pPred;
+//    VectorXd xPosterior;
+//    VectorXd pPosterior;
 
     MeasurementModel *measurementModel;
     TransitionModel  *transitionModel;
@@ -44,7 +44,7 @@ private:
     VectorXd xPredict(const State &prior, int dt);
     MatrixXd PPredict(const State &prior, int dt);
 
-    MatrixXd kalmanGain(const MatrixXd &crossCov, const MatrixXd &predictCov);
+    MatrixXd K(const MatrixXd &upsilon, const MatrixXd &predictCov);
     MatrixXd PUpdate(const MatrixXd &gain, const MatrixXd &pPred, const MatrixXd &pMeas);
     MatrixXd xUpdate(const VectorXd &xPred, const MatrixXd &gain, const VectorXd &xMeas, const VectorXd &xMeasPred);
     MeasurementPrediction *predictMeasurement(State *predState);
