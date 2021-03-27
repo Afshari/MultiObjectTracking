@@ -220,6 +220,7 @@ void DebugServer::readyRead() {
                                                       QString::fromStdString(matrixToStr(posteriorState->getP())) );
             socket->write(  response.toStdString().c_str(),
                             response.length() );
+
         } else if(code == 81) {
 
             TransitionLinearGaussian *transitionLinearGaussian = new TransitionLinearGaussian(0.005);
@@ -296,9 +297,9 @@ void DebugServer::readyRead() {
 
             QList<SingleHypothesis *> list;
             Detection *missDetection = new Detection(Detection::DetectionType::miss);
-            SingleHypothesis *singl = new SingleHypothesis(missDetection, predicted, transitionLinearGaussian,
+            SingleHypothesis *single = new SingleHypothesis(missDetection, predicted, transitionLinearGaussian,
                                                            nullptr, 1 - pda.P_D*pda.P_G);
-            list.append(singl);
+            list.append(single);
 
 //            std::cout << "x Pred: \r\n" << meas->statePred->getX() << std::endl;
 //            std::cout << "predic: \r\n" << predicted->getX() << std::endl;
@@ -308,18 +309,96 @@ void DebugServer::readyRead() {
                 double log_pdf = pda.logPDF(*(*recvMeasurements)[i]->x, *meas->zPred, *meas->S);
                 double probability = pda.getProbability(log_pdf);
 //                std::cout << probability << std::endl;
-                SingleHypothesis *singl = new SingleHypothesis((*recvMeasurements)[i], nullptr, transitionLinearGaussian,
+                SingleHypothesis *single = new SingleHypothesis((*recvMeasurements)[i], nullptr, transitionLinearGaussian,
                                                                meas, probability);
-                list.append(singl);
+                list.append(single);
 //                std::cout << *(*recvMeasurements)[i] << std::endl;
             }
+
             MultiHypothesis multi(&list);
             multi.normalizeWeights();
 
-//            for(int i = 0; i < multi.items->length(); i++) {
+            QString res = "";
+
+            for(int i = 0; i < multi.items->length(); i++) {
 //               std::cout << "normal probability: " << multi.items->at(i)->probability << std::endl;
-//            }
+                if(res != "")
+                    res += ", ";
+                res += QString::number(multi.items->at(i)->probability);
+            }
+
+            socket->write( res.toStdString().c_str(), res.length() );
+
+//            std::cout << "Result: " << res.toStdString() << std::endl;
 //            std::cout << std::endl;
+
+        } else if(code == 85) {
+
+            TransitionLinearGaussian *transitionLinearGaussian = new TransitionLinearGaussian(0.005);
+            KalmanFilter *kalman = new KalmanFilter(measurementModel, transitionLinearGaussian);
+            StateGaussian prior(recvX, recvP);
+
+            PDA pda(kalman, 0.125, 0.9);
+
+            QList<State *> objects;
+            objects.append(&prior);
+
+            QList<MultiHypothesis *> *res = pda.associate(objects, *recvMeasurements, dt);
+
+
+            for(int i = 0; i < res->length(); i++) {
+                QList<SingleHypothesis *> *currItems = res->at(i)->items;
+
+                QString dataToSend = "";
+                for(int j = 0; j < currItems->length(); j++) {
+                    QString currData = "";
+
+//                    std::cout << currItems->at(j)->probability << std::endl;
+//                    std::cout << currItems->at(j)->state->getX() << std::endl;
+//                    std::cout << currItems->at(j)->state->getP() << std::endl;
+//                    std::cout << "S: \r\n" << currItems->at(j)->measurementPrediction->S << std::endl;
+//                    std::cout << "Upsilon: \r\n" << currItems->at(j)->measurementPrediction->upsilon << std::endl;
+
+                    SingleHypothesis *currHypothesis = currItems->at(j);
+
+//                    std::cout << currItems->at(j)->probability << std::endl;
+                    if(currHypothesis->detection->type == Detection::DetectionType::detect) {
+//                        std::cout << "Got Data: \r\n" << *currHypothesis->measurementPrediction->S << std::endl;
+//                        std::cout << "--------------" << std::endl;
+
+//                        std::cout << "zPred: \r\n" << *currHypothesis->measurementPrediction->zPred << std::endl;
+
+                        currData += "1 | ";
+                        currData += QString("%1 | %2 | %3 | %4 | %5 | %6 | %7").arg(
+                                    QString::fromStdString(vectorToStr(currHypothesis->state->getX())),
+                                    QString::fromStdString(matrixToStr(currHypothesis->state->getP())),
+                                    QString::fromStdString(vectorToStr(*currHypothesis->detection->x)),
+                                    QString::fromStdString(matrixToStr(*currHypothesis->measurementPrediction->S)),
+                                    QString::fromStdString(matrixToStr(*currHypothesis->measurementPrediction->upsilon)),
+                                    QString::fromStdString(vectorToStr(*currHypothesis->measurementPrediction->zPred)),
+                                    QString::number(currHypothesis->probability)
+                                    );
+//                                    QString::fromStdString(matrixToStr(*currHypothesis->measurementPrediction->S))
+//                                    );
+//                        currHypothesis->state->getX();
+
+                    } else if(currHypothesis->detection->type == Detection::DetectionType::miss) {
+                        currData += "0 | ";
+                    }
+
+                    if(dataToSend != "")
+                        dataToSend += ", ";
+                    dataToSend += currData;
+
+//                    res += QString("%1 | %2").arg(
+//                               QString::number(currItems->at(j)->probability),
+//                               QString::fromStdString(matrixToStr(*currHypothesis->measurementPrediction->S)));
+
+//                    res += QString::number(currItems->at(j)->probability);
+                }
+                socket->write( dataToSend.toStdString().c_str(), dataToSend.length() );
+            }
+
 
         }
 
