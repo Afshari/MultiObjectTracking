@@ -46,6 +46,7 @@ add_executable(MultiObjectTracking
   Tests/testkalmanfilter.cpp
   tests/testpda.cpp
   Tests/testmultihypothesis.cpp
+  Tests/testutils.cpp
 )
 
 

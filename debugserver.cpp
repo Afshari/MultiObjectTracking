@@ -5,6 +5,7 @@ DebugServer::DebugServer(QObject *parent) : QObject(parent) {
     MatrixXd *mNoiseCovar = new MatrixXd(.75 * MatrixXd::Identity(2, 2));
     measurementModel = new MeasurementLinearGaussian(mNoiseCovar);
 
+    sendCounter = 0;
 
     connect(&server, &QTcpServer::newConnection, this, &DebugServer::newConnection);
 }
@@ -198,7 +199,65 @@ void DebugServer::readyRead() {
 //                std::cout << "----" << std::endl;
 //            }
         } else if(code == 24) {
+
             dt = receivedArr[1].toUInt();
+
+        } else if(code == 30) {
+
+            QStringList dim = receivedArr[1].split(',');
+            QStringList items = receivedArr[2].split(',');
+
+            MatrixXd means(dim[0].toUInt(), dim[1].toUInt());
+            for(int i = 0; i < means.rows(); i++) {
+                for(int j = 0; j < means.cols(); j++) {
+                    means(i, j) = items[ (i*dim[1].toUInt())  + j].toFloat();
+                }
+            }
+
+            recvMeans = new MatrixXd(means);
+//            std::cout << "means: " << means << std::endl;
+
+
+        } else if(code == 31) {
+
+            QStringList dim = receivedArr[1].split(',');
+            QStringList items = receivedArr[2].split(',');
+
+            recvCovars = new QList<MatrixXd *>();
+
+            for(int l = 0; l < dim[0].toInt(); l++) {
+                MatrixXd *covar = new  MatrixXd(dim[1].toUInt(), dim[2].toUInt());
+                for(int i = 0; i < covar->rows(); i++) {
+                    for(int j = 0; j < covar->cols(); j++) {
+                        (*covar)(i, j) = items[ ((l*dim[1].toInt()*dim[2].toInt()) + i*dim[2].toInt())  + j].toFloat();
+                    }
+                }
+//                std::cout << covar << std::endl;
+//                std::cout << "****" << std::endl;
+                recvCovars->append(covar);
+            }
+
+//            for(int i = 0; i < covars.length(); i++) {
+//                std::cout << *covars.at(i) << std::endl;
+//                std::cout << "****" << std::endl;
+//            }
+
+//            qInfo() << items;
+//            std::cout << "Size: " << covar.rows() << " " << covar.cols() << std::endl;
+//            recvCovars = covars;
+
+        } else if(code == 32) {
+
+            QStringList dim = receivedArr[1].split(',');
+            QStringList items = receivedArr[2].split(',');
+
+            VectorXd weights(dim[0].toUInt());
+            for(int i = 0; i < weights.size(); i++) {
+                weights[i] = items[i].toFloat();
+            }
+
+            recvWeights = new VectorXd(weights);
+//            std::cout << "weights: " << weights << std::endl;
         }
 
         else if(code == 80) {
@@ -207,6 +266,7 @@ void DebugServer::readyRead() {
             StateGaussian recvStateMeasurement(recvXPredMeas, recvPPredMeas);
             MeasurementPrediction measurementPrediction(&recvStateMeasurement, nullptr, nullptr, nullptr, recvUpsilon);
             TransitionLinearGaussian *transitionLinearGaussian = new TransitionLinearGaussian(0.005);
+            std::cout << "Initialized " << std::endl;
 
             KalmanFilter *kalman = new KalmanFilter(measurementModel, transitionLinearGaussian);
             State* posteriorState = kalman->update(state, *measurementModel, *recvMeasurement, measurementPrediction);
@@ -399,6 +459,79 @@ void DebugServer::readyRead() {
                 socket->write( dataToSend.toStdString().c_str(), dataToSend.length() );
             }
 
+        } else if(code == 86) {
+
+
+            TransitionLinearGaussian *transitionLinearGaussian = new TransitionLinearGaussian(0.005);
+            KalmanFilter *kalman = new KalmanFilter(measurementModel, transitionLinearGaussian);
+            StateGaussian prior(recvX, recvP);
+
+            PDA pda(kalman, 0.125, 0.9);
+
+            QList<State *> objects;
+            objects.append(&prior);
+
+            QList<MultiHypothesis *> *res = pda.associate(objects, *recvMeasurements, dt);
+
+            QString response = "";
+            for(int i = 0; i < res->length(); i++) {
+                QList<SingleHypothesis *> *currItems = res->at(i)->items;
+
+                QString dataToSend = "";
+                for(int j = 0; j < currItems->length(); j++) {
+                    QString currData = "";
+
+                    SingleHypothesis *currHypothesis = currItems->at(j);
+
+                    if(currHypothesis->detection->type == Detection::DetectionType::detect) {
+
+                        State* posteriorState = kalman->update(
+                                    *currHypothesis->state, *measurementModel,
+                                    *currHypothesis->detection->x, *currHypothesis->measurementPrediction);
+
+                        std::cout << "Posterior" << std::endl;
+                        std::cout << posteriorState->getX() << std::endl;
+                        std::cout << posteriorState->getP() << std::endl;
+                        std::cout << "--------------" << std::endl;
+
+                        sendCounter += 1;
+                        response += QString("%1 | %2 | %3;").arg(
+                                  QString::number(sendCounter),
+                                  QString::fromStdString(vectorToStr(posteriorState->getX())),
+                                  QString::fromStdString(matrixToStr(posteriorState->getP())) );
+//                        socket->write(  response.toStdString().c_str(),
+//                                        response.length() );
+
+
+                    } else if(currHypothesis->detection->type == Detection::DetectionType::miss) {
+
+                    }
+
+                }
+//                socket->write( dataToSend.toStdString().c_str(), dataToSend.length() );
+            }
+            QThread::msleep(100);
+            socket->write(  response.toStdString().c_str(), response.length() );
+
+        } else if(code == 87) {
+
+            VectorXd posteriorMean = Utils::mean(recvMeans, recvWeights);
+            std::cout << "Means: \r\n" << *recvMeans << std::endl;
+            std::cout << "mean: \r\n" << posteriorMean << std::endl;
+            std::cout << "Weights: \r\n" << *recvWeights << std::endl;
+//            for(int i = 0; i < recvCovars->length(); i++) {
+//                std::cout << *recvCovars->at(i) << std::endl;
+//                std::cout << "****" << std::endl;
+//            }
+//            std::cout << posteriorMean << std::endl;
+            MatrixXd posteriorCov = Utils::covar(*recvCovars, recvMeans, &posteriorMean, recvWeights);
+
+            QString response = QString("%1 | %2").arg(
+                QString::fromStdString(vectorToStr(posteriorMean)),
+                QString::fromStdString(matrixToStr(posteriorCov)));
+
+            socket->write(  response.toStdString().c_str(), response.length() );
+            std::cout << "-----------" << std::endl;
 
         }
 

@@ -3,8 +3,11 @@
 
 #include <QObject>
 #include <Eigen/Dense>
+#include <iostream>
 
 using Eigen::MatrixXd;
+using Eigen::VectorXd;
+
 
 class Utils : public QObject
 {
@@ -13,6 +16,8 @@ public:
     explicit Utils(QObject *parent = nullptr);
 
     static MatrixXd blkdiag(const MatrixXd& a, int count);
+    static VectorXd mean(MatrixXd *means, VectorXd *weights);
+    static MatrixXd covar(QList<MatrixXd *> covars, MatrixXd *means, VectorXd *mean, VectorXd *weights);
 
 signals:
 

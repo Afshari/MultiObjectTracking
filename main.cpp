@@ -11,6 +11,7 @@
 #include "Tests/testmeasurementlineargaussian.h"
 #include "Tests/testpda.h"
 #include "Tests/testmultihypothesis.h"
+#include "Tests/testutils.h"
 
 #include "debugserver.h"
 
@@ -49,6 +50,9 @@ int main(int argc, char *argv[])
 
     TestKalmanFilter kalmanFilter;
     QTest::qExec(&kalmanFilter);
+
+    TestUtils utils;
+    QTest::qExec(&utils);
 
 #endif
 

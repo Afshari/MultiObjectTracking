@@ -28,6 +28,7 @@ MultiHypothesis *PDA::hypothesis(State *prior, const QList<Detection *> &detecti
                                                     nullptr, 1 - this->P_D * this->P_G);
     list->append(single);
 
+
 //    std::cout << "x Pred: \r\n" << meas->statePred->getX() << std::endl;
 //    std::cout << "predic: \r\n" << predicted->getX() << std::endl;
 

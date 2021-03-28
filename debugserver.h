@@ -7,6 +7,7 @@
 #include <QAbstractSocket>
 #include <QNetworkProxy>
 #include <QTcpServer>
+#include <QThread>
 #include <iostream>
 #include <Eigen/Dense>
 
@@ -48,6 +49,11 @@ private:
     MatrixXd *recvUpsilon;
     VectorXd *recvMeasurement;
     QList<Detection *> *recvMeasurements;
+    int sendCounter;
+
+    MatrixXd *recvMeans;
+    VectorXd *recvWeights;
+    QList<MatrixXd *> *recvCovars;
 
     MeasurementLinearGaussian *measurementModel;
 

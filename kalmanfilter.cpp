@@ -10,8 +10,6 @@ KalmanFilter::KalmanFilter(MeasurementModel *measurementModel, TransitionModel *
 
 State* KalmanFilter::predict(const State &prior, int dt) {
 
-//    std::cout << xPredict(prior, dt)  << std::endl;
-//    std::cout << PPredict(prior, dt)  << std::endl;
     VectorXd *x = new VectorXd(xPredict(prior, dt));
     MatrixXd *P = new MatrixXd(PPredict(prior, dt));
 
@@ -22,10 +20,19 @@ State* KalmanFilter::update(const State &state, const MeasurementModel &measurem
                           const VectorXd &measurement, const MeasurementPrediction &measurementPrediction) {
 
     MatrixXd upsilon = this->measurementModel->upsilon(state.getP());
-    MatrixXd gain = K(upsilon, measurementPrediction.statePred->getP());
-    MatrixXd* P = new MatrixXd( this->PUpdate(gain, state.getP(), measurementPrediction.statePred->getP()) );
+//    std::cout << upsilon << std::endl << std::endl;
+//    std::cout << *measurementPrediction.S << std::endl << std::endl;
+    MatrixXd gain = K(upsilon, *measurementPrediction.S);
+//    std::cout << "Gain: \r\n" << gain << std::endl;
+    MatrixXd *P = new MatrixXd( this->PUpdate(gain, state.getP(), *measurementPrediction.S) );
+//    std::cout << "P: \r\n" << *P << std::endl;
 
-    VectorXd* x = new VectorXd( state.getX() + gain * (measurement - measurementPrediction.statePred->getX()) );
+//    std::cout << "measurement: \r\n" << measurement << std::endl;
+//    std::cout << "measurementPrediction.statePred->getX(): \r\n" << *measurementPrediction.xOfZPred << std::endl;
+
+    VectorXd* x = new VectorXd( state.getX() + gain * (measurement - *measurementPrediction.xOfZPred) );
+
+//    std::cout << "Calculated " << std::endl;
 
     return new StateGaussian(x, P);
 }
