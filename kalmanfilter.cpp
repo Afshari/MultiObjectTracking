@@ -20,8 +20,8 @@ State* KalmanFilter::update(const State &state, const MeasurementModel &measurem
                           const VectorXd &measurement, const MeasurementPrediction &measurementPrediction) {
 
     MatrixXd upsilon = this->measurementModel->upsilon(state.getP());
-//    std::cout << upsilon << std::endl << std::endl;
-//    std::cout << *measurementPrediction.S << std::endl << std::endl;
+//    std::cout << "Upsilon: \r\n" << upsilon << std::endl << std::endl;
+//    std::cout << "Innovation Cov: \r\n" << *measurementPrediction.S << std::endl << std::endl;
     MatrixXd gain = K(upsilon, *measurementPrediction.S);
 //    std::cout << "Gain: \r\n" << gain << std::endl;
     MatrixXd *P = new MatrixXd( this->PUpdate(gain, state.getP(), *measurementPrediction.S) );

@@ -18,6 +18,7 @@ public:
 private slots:
     void testMean();
     void testCovar();
+    void testCovar2();
 
 signals:
 

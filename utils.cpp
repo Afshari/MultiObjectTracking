@@ -30,20 +30,23 @@ MatrixXd Utils::covar(QList<MatrixXd *> covars, MatrixXd *means, VectorXd *mean,
     for(int i = 0; i < means->cols(); i++)
         mMean->col(i) = *mean;
 
+    MatrixXd *mWeights = new MatrixXd(covars[0]->rows(), weights->rows());
 
-    MatrixXd *mWeights = new MatrixXd(covars[0]->rows(), covars[1]->cols());
-    for(int i = 0; i < mWeights->rows(); i++)
+    for(int i = 0; i < mWeights->rows(); i++) {
         mWeights->row(i) = *weights;
-
+    }
 
     MatrixXd deltaMeans = (*means) - (*mMean);
 
+
     MatrixXd* result = new MatrixXd( MatrixXd::Identity( covars.length(), covars[0]->rows() ) );
 
-    for(int i = 0; i < covars.length(); i++) {
-        (*result)(i, i) =  (*covars.at(i)).cwiseProduct(*mWeights).sum();
+    for(int i = 0; i < result->rows(); i++) {
+        MatrixXd mid = (*covars.at(i)).cwiseProduct((*mWeights));
+        for(int j = 0; j < result->cols(); j++) {
+            (*result)(i, j) = mid.row(j).sum();
+        }
     }
-
 
     *result = (*result) + (*mWeights).cwiseProduct(deltaMeans) * deltaMeans.transpose();
 
