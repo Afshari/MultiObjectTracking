@@ -65,7 +65,6 @@ void DebugServer::readyRead() {
         QStringList receivedArr = splitData[k].split(':');
         int code = receivedArr[0].toUInt();
 
-//        std::cout << code << std::endl;
 
         if(code == 10) {
 
@@ -89,6 +88,8 @@ void DebugServer::readyRead() {
                 predState[i] = items[i].toFloat();
             }
 
+            std::cout << "prior x: \r\n" << predState << std::endl;
+
             recvX = new VectorXd(predState);
 
         } else if(code == 12) {
@@ -102,6 +103,8 @@ void DebugServer::readyRead() {
                     predCov(i, j) = items[ (i*dim[1].toUInt())  + j].toFloat();
                 }
             }
+
+            std::cout << "prior cov: \r\n" << predCov << std::endl;
 
             recvP = new MatrixXd(predCov);
 
@@ -155,8 +158,9 @@ void DebugServer::readyRead() {
                 predState[i] = items[i].toFloat();
             }
 
+            std::cout << "prior x: \r\n" << predState << std::endl;
+
             recvX = new VectorXd(predState);
-//            std::cout << "x: " << *recvX << std::endl;
 
         } else if(code == 21) {
 
@@ -170,8 +174,9 @@ void DebugServer::readyRead() {
                 }
             }
 
+            std::cout << "prior cov: \r\n" << predCov << std::endl;
+
             recvP = new MatrixXd(predCov);
-//            std::cout << "P: " << *recvP << std::endl;
 
         } else if(code == 22) {
 
@@ -258,6 +263,13 @@ void DebugServer::readyRead() {
 
             recvWeights = new VectorXd(weights);
 //            std::cout << "weights: " << weights << std::endl;
+        } else if(code == 40) {
+
+            std::cout << "Received Code: \r\n" << code << std::endl;
+
+            QString response = QString("50");
+            socket->write(  response.toStdString().c_str(),
+                            response.length() );
         }
 
         else if(code == 80) {
