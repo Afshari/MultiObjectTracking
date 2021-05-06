@@ -19,6 +19,9 @@ public:
     static VectorXd mean(MatrixXd *means, VectorXd *weights);
     static MatrixXd covar(QList<MatrixXd *> covars, MatrixXd *means, VectorXd *mean, VectorXd *weights);
 
+    static std::string matrixToStr(const Eigen::MatrixXd& mat);
+    static std::string vectorToStr(const Eigen::VectorXd& vec);
+
 signals:
 
 };

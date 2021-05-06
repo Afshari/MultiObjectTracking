@@ -14,6 +14,7 @@
 #include "Tests/testutils.h"
 
 #include "debugserver.h"
+#include "tcpserver.h"
 
 #include <iostream>
 
@@ -26,13 +27,18 @@ using Eigen::VectorXd;
 #define RUN_DEBUG   2
 #define RUN_APP     3
 
-#define RUN_STATUS  RUN_DEBUG
+#define RUN_STATUS  RUN_APP
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-#if RUN_STATUS == RUN_DEBUG
+#if RUN_STATUS == RUN_APP
+
+    TCPServer tcpServer;
+    tcpServer.start();
+
+#elif RUN_STATUS == RUN_DEBUG
 
     DebugServer server;
     server.start();

@@ -53,6 +53,18 @@ MatrixXd Utils::covar(QList<MatrixXd *> covars, MatrixXd *means, VectorXd *mean,
     return *result;
 }
 
+std::string Utils::vectorToStr(const Eigen::VectorXd& vec) {
+
+    std::stringstream ss;
+    ss << vec;
+    return ss.str();
+}
+
+std::string Utils::matrixToStr(const Eigen::MatrixXd& mat) {
+    std::stringstream ss;
+    ss << mat;
+    return ss.str();
+}
 
 
 

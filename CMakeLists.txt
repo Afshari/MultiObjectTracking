@@ -37,9 +37,11 @@ add_executable(MultiObjectTracking
   kalmanfilter.cpp
   associator.cpp
   pda.cpp
+  pdatracker.cpp
   singlehypothesis.cpp
   multihypothesis.cpp
 
+  tcpserver.cpp
   debugserver.cpp
 
   Tests/testmeasurementlineargaussian.cpp
