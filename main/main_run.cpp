@@ -1,16 +1,26 @@
 
-#include <QCoreApplication>
 #include <iostream>
-
-#include "tcpserver.h"
+#include <QCoreApplication>
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QQuickView>
+#include <QQmlContext>
+#include "ui/inc/ui_handler.h"
 
 int main(int argc, char *argv[]) {
 
-    QCoreApplication a(argc, argv);
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-    TCPServer tcpServer;
-    tcpServer.start();
+    QGuiApplication app(argc, argv);
+
+    QQmlApplicationEngine engine;
+    const QUrl url(QStringLiteral("qrc:/ui/main.qml"));
+
+    UIHandler uiHandler;
+    engine.rootContext()->setContextProperty("backend", &uiHandler);
+    engine.load(url);
+
+    return app.exec();
 
 
-    return a.exec();
 }

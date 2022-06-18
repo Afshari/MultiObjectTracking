@@ -20,6 +20,7 @@ public:
     explicit Tracker(shared_ptr<Estimator> estimator, shared_ptr<State> initial_state, shared_ptr<Sensor> sensor,
                      double gating_size, double reduction_M, double w_min = 0, QObject *parent = nullptr);
     virtual void step(const MatrixXd &z) { std::ignore = z; }
+    virtual VectorXd getX();
 
 protected:
     shared_ptr<Estimator> estimator;

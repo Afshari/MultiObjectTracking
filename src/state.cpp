@@ -11,7 +11,7 @@ State::State(const State &state) {
 
     this->x = make_shared<VectorXd>( state.getX() );
     this->P = make_shared<MatrixXd>( state.getP() );
-    std::cout << "Copy Constructor ..." << std::endl;
+    // std::cout << "Copy Constructor ..." << std::endl;
 }
 
 

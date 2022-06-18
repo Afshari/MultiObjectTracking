@@ -12,34 +12,28 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
+if(MINGW OR CYGWIN)
+  add_definitions(-O3)
+endif()
+
 MESSAGE( STATUS CMAKE_PREFIX_PATH " = " ${CMAKE_PREFIX_PATH} )
 
 add_definitions(-DRUN_TEST=1)
 add_definitions(-DRUN_DEBUG=2)
 add_definitions(-DRUN_APP=3)
 
-option(TEST_ENABLE  ""  OFF)
-option(DEBUG_ENABLE ""  ON)
-option(APP_ENABLE   ""  OFF)
+set( SET_RUN_TEST   "1")
+set( SET_RUN_DEBUG  "2")
+set( SET_RUN_APP    "3")
 
-MESSAGE( STATUS "-->> TEST_ENABLE  is " ${TEST_ENABLE}  )
-MESSAGE( STATUS "-->> DEBUG_ENABLE is " ${DEBUG_ENABLE} )
-MESSAGE( STATUS "-->> APP_ENABLE   is " ${APP_ENABLE}   )
+##### Here you can define the Running Mode of the Application #####
+# set( SET_RUN_TYPE ${SET_RUN_TEST} )
 
-if(APP_ENABLE)
-    add_definitions(-DRUN_TYPE=RUN_APP)
-    MESSAGE( STATUS "-->> Configure Running App" )
-elseif(TEST_ENABLE)
-    add_definitions(-DRUN_TYPE=RUN_TEST)
-    MESSAGE( STATUS "-->> Configure Running Test" )
-elseif(DEBUG_ENABLE)
-    add_definitions(-DRUN_TYPE=RUN_DEBUG)
-    MESSAGE( STATUS "-->> Configure Running Debug" )
-endif()
 
 find_package(Qt5Test REQUIRED)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(Qt5Core)
+find_package(Qt5Quick)
 find_package(Qt5Network)
 
 include_directories(inc/stats)
@@ -95,9 +89,10 @@ set(SOURCES main.cpp                        ################## SOURCE FILES ####
 )
 
 
-if(TEST_ENABLE)
+if( ${SET_RUN_TYPE} MATCHES ${SET_RUN_TEST} )
 
     MESSAGE( STATUS "-->> Add Executable for Test" )
+    add_definitions(-DRUN_TYPE=RUN_TEST)
     find_package(GTest CONFIG REQUIRED)
 
     set(SOURCES ${SOURCES}
@@ -124,31 +119,37 @@ if(TEST_ENABLE)
 
     target_link_libraries(TestMultiObjectTracking Qt5::Core Qt5::Network Eigen3::Eigen Qt5::Test GTest::gtest GTest::gmock)
 
-elseif(DEBUG_ENABLE)
+elseif( ${SET_RUN_TYPE} MATCHES ${SET_RUN_DEBUG} )
 
     MESSAGE( STATUS "-->> Add Executable for Debug" )
+    add_definitions(-DRUN_TYPE=RUN_DEBUG)
     set(SOURCES ${SOURCES}
         src/debug_server.cpp
+        ui/src/ui_connection_handler.cpp
         inc/debug_server.h
+        ui/inc/ui_connection_handler.h
+        qml_debug.qrc
     )
 
     add_executable(DebugMultiObjectTracking
         ${SOURCES} )
 
-    target_link_libraries(DebugMultiObjectTracking Qt5::Core Qt5::Network Eigen3::Eigen)
+    target_link_libraries(DebugMultiObjectTracking Qt5::Core Qt5::Quick Qt5::Network Eigen3::Eigen)
 
-else()
+elseif( ${SET_RUN_TYPE} MATCHES ${SET_RUN_APP} )
 
     MESSAGE( STATUS "-->> Add Executable for Running App" )
+    add_definitions(-DRUN_TYPE=RUN_APP)
 
     set(SOURCES ${SOURCES}
-        src/tcpserver.cpp
-        inc/tcpserver.h
+        ui/src/ui_handler.cpp
+        ui/inc/ui_handler.h
+        qml.qrc
     )
 
     add_executable(MultiObjectTracking
         ${SOURCES} )
-    target_link_libraries(MultiObjectTracking Qt5::Core Qt5::Network Eigen3::Eigen)
+    target_link_libraries(MultiObjectTracking Qt5::Core Qt5::Quick Qt5::Network Eigen3::Eigen)
 
 endif()
 

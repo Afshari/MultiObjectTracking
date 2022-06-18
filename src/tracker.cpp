@@ -10,3 +10,7 @@ Tracker::Tracker(shared_ptr<Estimator> estimator, shared_ptr<State> initial_stat
     this->state = initial_state;
     this->reduction_M = reduction_M;
 }
+
+VectorXd Tracker::getX() {
+    return this->state->getX();
+}

@@ -1,5 +1,5 @@
-#ifndef TCPSERVER_H
-#define TCPSERVER_H
+#ifndef _TCP_SERVER_H
+#define _TCP_SERVER_H
 
 #include <QObject>
 #include <QDebug>
@@ -11,17 +11,17 @@
 #include <iostream>
 #include <Eigen/Dense>
 
-#include "inc/stategaussian.h"
-#include "inc/measurementmodel.h"
-#include "inc/measurementprediction.h"
-#include "inc/measurementlineargaussian.h"
-#include "inc/kalmanfilter.h"
-#include "inc/transition_linear_gaussian.h"
-#include "inc/pda.h"
-#include "inc/singlehypothesis.h"
-#include "inc/multihypothesis.h"
-#include "inc/detection.h"
-#include "inc/pdatracker.h"
+//#include "inc/stategaussian.h"
+//#include "inc/measurement_model.h"
+//#include "inc/measurementprediction.h"
+//#include "inc/measurementlineargaussian.h"
+//#include "inc/kalmanfilter.h"
+//#include "inc/transition_linear_gaussian.h"
+//#include "inc/pda.h"
+//#include "inc/singlehypothesis.h"
+//#include "inc/multihypothesis.h"
+//#include "inc/detection.h"
+//#include "inc/pdatracker.h"
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
@@ -43,22 +43,6 @@ public slots:
 
 private:
 
-    int dt = 0;
-
-//    VectorXd *recvX;
-//    MatrixXd *recvP;
-    PDATracker *pdaTracker;
-//    QList<Detection *> *recvMeasurements;
-//    int sendCounter;
-
-    MeasurementLinearGaussian *measurementModel;
-    TransitionLinearGaussian *transitionLinearGaussian;
-    KalmanFilter *kalman;
-    StateGaussian *prior;
-    PDA *pda;
-
-
-
 
 private:
     QTcpServer server;
@@ -68,4 +52,4 @@ signals:
 
 };
 
-#endif // TCPSERVER_H
+#endif // _TCP_SERVER_H

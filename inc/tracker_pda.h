@@ -20,7 +20,7 @@ public:
     virtual void step(const MatrixXd &z);
 
 protected:
-    shared_ptr<State> state;
+    // shared_ptr<State> state;
 
 };
 

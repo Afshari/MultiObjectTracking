@@ -72,8 +72,8 @@ shared_ptr<VectorXd> Estimator::predictedLikelihood( const State &state,
     S = (S + S.transpose()) / 2;
 
     // zk = h( x )
-    // VectorXd zk = *this->measurementModel->h( state.getX() );
-    VectorXd zk = Hx * state.getX();
+    VectorXd zk = *this->measurementModel->h( state.getX() );
+    // VectorXd zk = Hx * state.getX();
 
     VectorXd likelihood(z.cols());
 
@@ -108,6 +108,31 @@ shared_ptr<State> Estimator::momentMatching(const VectorXd &w, const VecState &s
     }
 
     return make_shared<State>( make_shared<VectorXd>(x), make_shared<MatrixXd>(P) );
+}
+
+State Estimator::momentMatching(const VectorXd &w, const shared_ptr<vector<State>>& states) {
+
+
+    int mk = w.rows();
+    if(mk == 1) {
+        return (states->at(0));
+    }
+
+    VectorXd new_w = w.array().exp();
+
+    VectorXd x = VectorXd::Zero( states->at(0).getX().rows() );
+    for(int i = 0; i < mk; i++) {
+        // x = x + w * state.x
+        x = x + new_w[i] * states->at(i).getX();
+    }
+
+    MatrixXd P = MatrixXd::Zero(states->at(0).getP().rows(), states->at(0).getP().cols());
+    for(int i = 0; i < mk; i++) {
+        // P = P + w * state.P + w * (x - state.x) @ (x - state.x).T
+        P = P + new_w[i] * states->at(i).getP() + new_w[i] * (x - states->at(i).getX()) * (x - states->at(i).getX()).transpose();
+    }
+
+    return State( make_shared<VectorXd>(x), make_shared<MatrixXd>(P) );
 }
 
 shared_ptr<State> Estimator::predict(const State &state) {

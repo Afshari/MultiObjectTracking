@@ -1,0 +1,40 @@
+<RCC>
+    <qresource prefix="/">
+        <file>ui/main.qml</file>
+        <file>ui/controls/ToggleButton.qml</file>
+        <file>ui/controls/TopBarButton.qml</file>
+        <file>ui/controls/LeftMenuBtn.qml</file>
+        <file>ui/controls/CustomTextField.qml</file>
+        <file>ui/controls/CustomButton.qml</file>
+        <file>ui/pages/textEditor.qml</file>
+        <file>ui/pages/settingsPage.qml</file>
+        <file>ui/pages/homePage.qml</file>
+        <file>ui/images/svg_images/close_icon.svg</file>
+        <file>ui/images/svg_images/settings_icon.svg</file>
+        <file>ui/images/svg_images/save_icon.svg</file>
+        <file>ui/images/svg_images/restore_icon.svg</file>
+        <file>ui/images/svg_images/resize_icon.svg</file>
+        <file>ui/images/svg_images/open_icon.svg</file>
+        <file>ui/images/svg_images/minimize_icon.svg</file>
+        <file>ui/images/svg_images/menu_icon.svg</file>
+        <file>ui/images/svg_images/maximize_icon.svg</file>
+        <file>ui/images/svg_images/icon_app_top.svg</file>
+        <file>ui/images/svg_images/home_icon.svg</file>
+        <file>ui/images/icon.ico</file>
+        <file>ui/images/svg_images/open_folder.svg</file>
+        <file>ui/pages/showImages.qml</file>
+        <file>ui/pages/draw2d.qml</file>
+        <file>ui/images/svg_images/camera.svg</file>
+        <file>ui/images/svg_images/paint.svg</file>
+        <file>ui/pages/singleObjectTracking.qml</file>
+        <file>ui/images/svg_images/multi_tracking.svg</file>
+        <file>ui/images/svg_images/single_tracking.svg</file>
+        <file>ui/pages/multiObjectTracking.qml</file>
+        <file>ui/images/svg_images/eraser.svg</file>
+        <file>ui/images/svg_images/draw_line.svg</file>
+        <file>ui/images/svg_images/measurement.svg</file>
+        <file>ui/images/svg_images/clutter.svg</file>
+        <file>ui/controls/ButtonLabel.qml</file>
+        <file>ui/images/svg_images/run.svg</file>
+    </qresource>
+</RCC>

@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QDebug>
+#include <memory>
 #include <Eigen/Dense>
 
 using std::shared_ptr;

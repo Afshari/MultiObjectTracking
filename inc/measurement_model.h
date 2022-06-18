@@ -2,6 +2,7 @@
 #define MEASUREMENT_MODEL_H
 
 #include <QObject>
+#include <memory>
 #include <Eigen/Dense>
 
 using std::shared_ptr;

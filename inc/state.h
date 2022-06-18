@@ -4,6 +4,7 @@
 #include <QObject>
 #include <Eigen/Dense>
 #include <iostream>
+#include <memory>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;

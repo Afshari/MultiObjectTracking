@@ -43,14 +43,13 @@ void TrackerPDA::step(const MatrixXd &z) {
      w_theta_log_k = *std::get<0>(mergeResult);
      hypotheses = *std::get<1>(mergeResult);
 
-     Utils::printEigen<VectorXd>(w_theta_log_k, "w_theta_log_k");
+     // Utils::printEigen<VectorXd>(w_theta_log_k, "w_theta_log_k");
 
-    // Utils::printf("h size %d", hypotheses.size());
+     // Utils::printf("h size %d", hypotheses.size());
      this->state = hypotheses[0];
 
      this->state = this->estimator->predict(*this->state);
-     Utils::printEigen<VectorXd>(this->state->getX(), "this state");
-
+     // Utils::printEigen<VectorXd>(this->state->getX(), "this state");
 }
 
 

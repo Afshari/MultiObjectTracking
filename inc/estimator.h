@@ -33,6 +33,7 @@ public:
                                                         const State &state, const MatrixXd &z, float gating_size);
     virtual shared_ptr<VectorXd> predictedLikelihood(const State &state, const MatrixXd &z);
     virtual shared_ptr<State> momentMatching(const VectorXd &w, const VecState &states);
+    virtual State momentMatching(const VectorXd &w, const shared_ptr<vector<State>>& states);
     virtual shared_ptr<State> predict(const State &state);
     virtual shared_ptr<State> update(const State &state, const MatrixXd &z);
 

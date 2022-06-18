@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <Eigen/Dense>
+#include <memory>
 #include <iostream>
 #include <vector>
 #include <stdlib.h>

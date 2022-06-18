@@ -1,5 +1,5 @@
-#ifndef DEBUG_SERVER_H
-#define DEBUG_SERVER_H
+#ifndef _DEBUG_SERVER_H_
+#define _DEBUG_SERVER_H_
 
 #include <QObject>
 #include <QDebug>
@@ -10,6 +10,11 @@
 #include <QThread>
 #include <iostream>
 
+#include <QQmlApplicationEngine>
+#include <QQuickView>
+#include <QQmlContext>
+#include "ui/inc/ui_connection_handler.h"
+
 #include "inc/input_parser.h"
 #include "inc/estimator.h"
 #include "inc/measurement_range_bearing.h"
@@ -19,6 +24,7 @@
 #include "inc/hypothesis.h"
 #include "inc/sensor.h"
 #include "inc/tracker_nn.h"
+#include "inc/tracker.h"
 #include "inc/tracker_pda.h"
 #include "inc/tracker_gaussian_sum.h"
 #include "inc/multi_tracker_gnn.h"
@@ -35,10 +41,12 @@ using Eigen::Vector4d;
 class DebugServer : public QObject {
     Q_OBJECT
 public:
-    explicit DebugServer(QObject *parent = nullptr);
+    explicit DebugServer(const QQmlApplicationEngine &engine, QObject *parent = nullptr);
 
 protected:
     shared_ptr<InputParser> inputParser;
+    UIConnectionHandler connectionHandler;
+    unique_ptr<Tracker> tracker;
 
     void handleCap(const string &data);
     void handlePrune(const string &data);
@@ -49,6 +57,9 @@ protected:
     void handleGNN(const string &data);
     void handleJPDA(const string &data);
     void handleMHT(const string &data);
+    void handleGroundTruth(const string &data);
+    void handleMeasurementsDraw(const string &data);
+    void handlePDAwGUI(const string &data);
 
 public slots:
     void start();
@@ -63,4 +74,4 @@ private:
 
 };
 
-#endif // DEBUG_SERVER_H
+#endif // _DEBUG_SERVER_H_
