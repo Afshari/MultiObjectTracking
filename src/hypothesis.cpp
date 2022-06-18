@@ -119,7 +119,7 @@ tuple<shared_ptr<VectorXd>, shared_ptr<vector<int>>> Hypothesis::cap(const vecto
 }
 
 
-tuple<shared_ptr<VectorXd>, PtrVecState> Hypothesis::merge(const VecState &states, const VectorXd &weights, long threshold) {
+tuple<shared_ptr<VectorXd>, PtrVecState> Hypothesis::merge(const VecState &states, const VectorXd &weights, long long threshold) {
 
     vector<int> I(weights.rows());
     std::iota(I.begin(), I.end(), 0);
@@ -142,7 +142,7 @@ tuple<shared_ptr<VectorXd>, PtrVecState> Hypothesis::merge(const VecState &state
                 Ij.push_back(i);
         }
 
-        Utils::print(Ij, "Ij");
+        // Utils::print(Ij, "Ij");
         shared_ptr<VectorXd> temp;
         double sum_log;
         tie(temp, sum_log) = normalizeLogWeights(*Utils::getWithIndices(w, Ij));

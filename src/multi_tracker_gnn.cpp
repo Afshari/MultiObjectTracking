@@ -10,7 +10,7 @@ MultiTrackerGNN::MultiTrackerGNN(shared_ptr<Estimator> estimator, PtrVecState st
 void MultiTrackerGNN::step(const MatrixXd &z) {
 
     int n = this->states->size();
-    Utils::printf("gating_size: %f", gating_size);
+    // Utils::printf("gating_size: %f", gating_size);
 
     vector<ArrayXi> gated_index;
     std::set<int> set_gated_index;
@@ -68,13 +68,13 @@ void MultiTrackerGNN::step(const MatrixXd &z) {
         }
     }
 
+    for(uint i = 0; i < states->size(); i++) {
+        Utils::printEigen<VectorXd>(states->at(i)->getX(), "states");
+    }
+
     // Predict
     for(uint i = 0; i < states->size(); i++) {
         states->at(i) = this->estimator->predict(*states->at(i));
-    }
-
-    for(uint i = 0; i < states->size(); i++) {
-        Utils::printEigen<VectorXd>(states->at(i)->getX(), "states");
     }
 
 }

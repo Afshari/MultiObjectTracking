@@ -47,6 +47,7 @@ void TrackerPDA::step(const MatrixXd &z) {
 
      // Utils::printf("h size %d", hypotheses.size());
      this->state = hypotheses[0];
+     Utils::printEigen<VectorXd>(this->state->getX(), "updated state");
 
      this->state = this->estimator->predict(*this->state);
      // Utils::printEigen<VectorXd>(this->state->getX(), "this state");

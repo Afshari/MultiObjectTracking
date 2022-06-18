@@ -86,8 +86,8 @@ void Hungarian::assignmentoptimal(int *assignment, double *cost, double *distMat
     for (row = 0; row<nOfElements; row++)
     {
         value = distMatrixIn[row];
-        if (value < 0)
-            std::cerr << "All matrix elements have to be non-negative." << std::endl;
+//        if (value < 0)
+//            std::cerr << "All matrix elements have to be non-negative." << std::endl;
         distMatrix[row] = value;
     }
 

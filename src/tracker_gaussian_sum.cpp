@@ -5,6 +5,10 @@ TrackerGaussianSum::TrackerGaussianSum(shared_ptr<Estimator> estimator, shared_p
                                        double w_min, QObject *parent) :
     Tracker(estimator, initial_state, sensor, gating_size, reduction_M, w_min, parent) {
 
+    this->w_logs = make_shared<VectorXd>(1);
+    (*this->w_logs)(0, 0) = 0;
+    this->hypotheses = make_shared<vector<shared_ptr<State>>>();
+    this->hypotheses->push_back(initial_state);
 }
 
 
@@ -13,7 +17,7 @@ void TrackerGaussianSum::step(const MatrixXd &z) {
     double w_theta_log_0 = log( 1 - this->sensor->get_P_D() );
     Vector<double, 1> w_theta_factor( log( this->sensor->get_P_D() / this->sensor->get_intensity() ) );
 
-    // Utils::print(*this->w_logs, "w logs");
+    // Utils::printEigen<VectorXd>(*this->w_logs, "w logs");
     // Utils::printf("Hypothesis Size: %d", this->hypotheses->size());
 
     VecState hypotheses_update;
@@ -27,11 +31,11 @@ void TrackerGaussianSum::step(const MatrixXd &z) {
         auto gatingResult = this->estimator->ellipsoidalGating(*state, z, gating_size);
         MatrixXd gated_z = *std::get<1>(gatingResult);
         int mk = gated_z.cols();
-        // Utils::print(z_gate, "z_gate");
+        // Utils::printEigen<MatrixXd>(gated_z, "z_gate");
         shared_ptr<State> hypothesis_0 = state;
 
         shared_ptr<VectorXd> log_likelihood = this->estimator->predictedLikelihood(*state, gated_z);
-        // Utils::print(*log_likelihood, "log_likelihood");
+        // Utils::printEigen<VectorXd>(*log_likelihood, "log_likelihood");
         VectorXd w_theta_log_k;
         if(log_likelihood->rows() > 0) {
             w_theta_log_k = Vector<double, 1>(w_log).replicate(log_likelihood->rows(), 1) +
@@ -79,16 +83,18 @@ void TrackerGaussianSum::step(const MatrixXd &z) {
 
     MatrixXd::Index max_index;
     double max_theta = w_log_update.maxCoeff(&max_index);
-    Utils::printf("max: %d   %f\r\n", max_index, max_theta);
-    Utils::printEigen<VectorXd>(hypotheses_update[max_index]->getX(), "state x");
+    // Utils::printf("max: %d   %f\r\n", max_index, max_theta);
+    // Utils::printEigen<VectorXd>(hypotheses_update[max_index]->getX(), "state x");
 
     for(auto theta = 0U; theta < hypotheses_update.size(); theta++) {
         hypotheses_update[theta] = this->estimator->predict(*hypotheses_update[theta]);
     }
 
+    this->w_logs = make_shared<VectorXd>(w_log_update);
+    this->hypotheses = make_shared<vector<shared_ptr<State>>>(hypotheses_update);
+
     // for(auto i = 0U; i < hypotheses_update.size(); i++)
         // Utils::print(hypotheses_update[i]->getX(), "predicted x");
-
 }
 
 

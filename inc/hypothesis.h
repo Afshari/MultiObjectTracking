@@ -27,7 +27,7 @@ public:
     virtual tuple<shared_ptr<VectorXd>, shared_ptr<vector<int>>> prune(const vector<int> &states, const VectorXd &weights, float threshold);
     virtual tuple<shared_ptr<VectorXd>, PtrVecState> cap(const VecState &states, const VectorXd &weights, int threshold);
     virtual tuple<shared_ptr<VectorXd>, shared_ptr<vector<int>>> cap(const vector<int> &states, const VectorXd &weights, int threshold);
-    virtual tuple<shared_ptr<VectorXd>, PtrVecState> merge(const VecState &states, const VectorXd &weights, long threshold);
+    virtual tuple<shared_ptr<VectorXd>, PtrVecState> merge(const VecState &states, const VectorXd &weights, long long threshold);
     virtual shared_ptr<vector<Assignment>> sort(const vector<Assignment> &assignment, vector<double> &costs);
 
     template<typename T>
