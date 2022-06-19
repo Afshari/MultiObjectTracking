@@ -418,6 +418,7 @@ void handleGNN() {
 
     QMap<QString, QString> init_values;
     getDataFromFile("debug_data/MOT/1_1/init.txt", init_values);
+    // getDataFromFile("debug_data/MOT/1_2/init.txt", init_values);
 
     qDebug() << init_values;
 
@@ -448,6 +449,7 @@ void handleGNN() {
 
         QMap<QString, QString> state_values;
         getDataFromFile(QString("debug_data/MOT/1_1/init_states_%1.txt").arg(i), state_values);
+        // getDataFromFile(QString("debug_data/MOT/1_2/init_states_%1.txt").arg(i), state_values);
 
         shared_ptr<VectorXd> x = getVectorXdData(state_values, "var_x", 5);
         shared_ptr<MatrixXd> P = getSquareMatrixXdData(state_values, "var_P", 5);
@@ -456,17 +458,21 @@ void handleGNN() {
     }
 
     shared_ptr<Estimator> estimator = make_shared<Estimator>(measurement_model, transition_model);
-
     MultiTrackerGNN tracker(estimator, states, sensor, 13.8155, M, w_min);
+
 
     for(int i = 1; i <= 20; i++) {
 
         QMap<QString, QString> data_values;
         getDataFromFile(QString("debug_data/MOT/1_1/%1.txt").arg(i), data_values);
+        // getDataFromFile(QString("debug_data/MOT/1_2/%1.txt").arg(i), data_values);
 
+        if(i == 13) {
+            qDebug() << "Start of Debugging ...";
+        }
         std::cout << "i: " << i << "--------------------------" << std::endl;
         MatrixXd z = getMeasurementData(data_values);
-        tracker.step(z);
+        tracker.step(z, i == 13);
     }
 }
 

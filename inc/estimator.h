@@ -30,7 +30,7 @@ public:
     explicit Estimator(shared_ptr<MeasurementModel> measurementModel, shared_ptr<TransitionModel> transitionModel,
                      QObject *parent = nullptr);
     virtual tuple<shared_ptr<ArrayXi>, shared_ptr<MatrixXd>> ellipsoidalGating(
-                                                        const State &state, const MatrixXd &z, float gating_size);
+                                const State &state, const MatrixXd &z, float gating_size);
     virtual shared_ptr<VectorXd> predictedLikelihood(const State &state, const MatrixXd &z);
     virtual shared_ptr<State> momentMatching(const VectorXd &w, const VecState &states);
     virtual State momentMatching(const VectorXd &w, const shared_ptr<vector<State>>& states);

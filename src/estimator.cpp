@@ -36,7 +36,6 @@ tuple<shared_ptr<ArrayXi>, shared_ptr<MatrixXd>> Estimator::ellipsoidalGating(
     for(auto i = 0U; i < z.cols(); i++) {
         dm(i) = d(Eigen::all, i).transpose() * S.inverse() * d(Eigen::all, i);
     }
-    // Utils::print(dm, "dm");
 
     MatrixXd z_gate = (dm.array() < gating_size).cast<double>().matrix();
     // Utils::print(z_in_gate, "z_in_gate");
