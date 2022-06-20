@@ -32,8 +32,16 @@ void MultiTrackerJPDA::step(const MatrixXd &z) {
     MatrixXd L = MatrixXd::Constant(n, n+m, std::numeric_limits<double>::infinity());
     for(int i = 0; i < n; i++) {
         int gated_size = gated_index[i].size();
+        int L_last_idx = 0;
         for(int k = 0; k < gated_size; k++) {
             int j = gated_index.at(i)[k];
+            int L_idx = j;
+            if(L_idx < m) {
+                L_last_idx = L_idx;
+            } else {
+                L_last_idx += 1;
+                L_idx = L_last_idx;
+            }
 
             MatrixXd S    = (*estimator->H(states->at(i)->getX())) * states->at(i)->getP() * estimator->H(states->at(i)->getX())->transpose();
             VectorXd zbar = *estimator->h(states->at(i)->getX());
@@ -43,7 +51,7 @@ void MultiTrackerJPDA::step(const MatrixXd &z) {
             MatrixXd formula_mat_1 = -0.5 * (z(Eigen::all, j) - zbar).transpose() * S.inverse() * (z(Eigen::all, j) - zbar);
             double formula_num_3 = formula_mat_1(0, 0);
 
-            L(i, j) = -( formula_num_1 + formula_num_2 + formula_num_3  );
+            L(i, L_idx) = -( formula_num_1 + formula_num_2 + formula_num_3  );
         }
         L(i,m+i) = - log(1-sensor->get_P_D());
     }
@@ -127,15 +135,14 @@ void MultiTrackerJPDA::step(const MatrixXd &z) {
         states->at(i) = make_shared<State>( make_shared<VectorXd>(x), make_shared<MatrixXd>(P) );
     }
 
-    //// 7. Predict
-    for(uint i = 0; i < states->size(); i++) {
-        states->at(i) = this->estimator->predict(*states->at(i));
-    }
-
     for(uint i = 0; i < states->size(); i++) {
         Utils::printEigen<VectorXd>(states->at(i)->getX(), "states");
     }
 
+    //// 7. Predict
+    for(uint i = 0; i < states->size(); i++) {
+        states->at(i) = this->estimator->predict(*states->at(i));
+    }
 }
 
 

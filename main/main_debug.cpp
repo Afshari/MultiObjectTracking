@@ -17,6 +17,8 @@ void handleNearestNeighbor();
 void handlePDA();
 void handleGaussianSum();
 void handleGNN();
+void handleJPDA();
+void handleMHT();
 
 int main(int argc, char *argv[]) {
 
@@ -42,7 +44,9 @@ int main(int argc, char *argv[]) {
     // handleNearestNeighbor();
     // handlePDA();
     // handleGaussianSum();
-    handleGNN();
+    // handleGNN();
+    // handleJPDA();
+    handleMHT();
 
     return app.exec();
 }
@@ -476,10 +480,122 @@ void handleGNN() {
     }
 }
 
+void handleJPDA() {
+
+    QMap<QString, QString> init_values;
+    // getDataFromFile("debug_data/MOT/2_1/init.txt", init_values);
+    getDataFromFile("debug_data/MOT/2_2/init.txt", init_values);
+
+    qDebug() << init_values;
+
+    int K = init_values["K"].toInt();
+    int M = init_values["M"].toInt();
+    float P_D = init_values["P_D"].toFloat();
+    float P_G = init_values["P_G"].toFloat();
+    int T = init_values["T"].toInt();
+    int lambda_c = init_values["lambda_c"].toFloat();
+    int mergeing_threshold = init_values["merging_threshold"].toInt();
+    int nbirths = init_values["nbirths"].toInt();
+    float sigma_omega = init_values["sigmaOmega"].toFloat();
+    float sigma_v = init_values["sigmaV"].toFloat();
+    float sigma_b = init_values["sigma_b"].toFloat();
+    float sigma_r = init_values["sigma_r"].toFloat();
+    float w_min = init_values["w_min"].toFloat();
+
+    shared_ptr<Vector2d> s = getVector2dData(init_values, "s", 2);
+    shared_ptr<MatrixXd> range_c = getSquareMatrixXdData(init_values, "range_c", 2);
+
+    shared_ptr<Sensor> sensor = make_shared<Sensor>(P_D, lambda_c, *range_c);
+    shared_ptr<Transition2dTurn> transition_model = make_shared<Transition2dTurn>(T, sigma_v, sigma_omega);
+    shared_ptr<MeasurementRangeBearing> measurement_model = make_shared<MeasurementRangeBearing>(sigma_r, sigma_b, s);
+
+    PtrVecState states = make_shared<vector<shared_ptr<State>>>();
+
+    for(int i = 1; i <= 4; i++) {
+
+        QMap<QString, QString> state_values;
+        // getDataFromFile(QString("debug_data/MOT/2_1/init_states_%1.txt").arg(i), state_values);
+        getDataFromFile(QString("debug_data/MOT/2_2/init_states_%1.txt").arg(i), state_values);
+
+        shared_ptr<VectorXd> x = getVectorXdData(state_values, "var_x", 5);
+        shared_ptr<MatrixXd> P = getSquareMatrixXdData(state_values, "var_P", 5);
+
+        states->push_back(make_shared<State>(x, P));
+    }
+
+    shared_ptr<Estimator> estimator = make_shared<Estimator>(measurement_model, transition_model);
+    MultiTrackerJPDA tracker(estimator, states, sensor, 13.8155, M, w_min);
+
+    for(int i = 1; i <= 20; i++) {
+
+        QMap<QString, QString> data_values;
+        // getDataFromFile(QString("debug_data/MOT/2_1/%1.txt").arg(i), data_values);
+        getDataFromFile(QString("debug_data/MOT/2_2/%1.txt").arg(i), data_values);
+
+        std::cout << "i: " << i << "--------------------------" << std::endl;
+        MatrixXd z = getMeasurementData(data_values);
+        tracker.step(z);
+    }
+}
 
 
+void handleMHT() {
 
+    QMap<QString, QString> init_values;
+    getDataFromFile("debug_data/MOT/3_1/init.txt", init_values);
+    // getDataFromFile("debug_data/MOT/3_2/init.txt", init_values);
 
+    qDebug() << init_values;
+
+    int K = init_values["K"].toInt();
+    int M = init_values["M"].toInt();
+    float P_D = init_values["P_D"].toFloat();
+    float P_G = init_values["P_G"].toFloat();
+    int T = init_values["T"].toInt();
+    int lambda_c = init_values["lambda_c"].toFloat();
+    int mergeing_threshold = init_values["merging_threshold"].toInt();
+    int nbirths = init_values["nbirths"].toInt();
+    float sigma_omega = init_values["sigmaOmega"].toFloat();
+    float sigma_v = init_values["sigmaV"].toFloat();
+    float sigma_b = init_values["sigma_b"].toFloat();
+    float sigma_r = init_values["sigma_r"].toFloat();
+    float w_min = init_values["w_min"].toFloat();
+
+    shared_ptr<Vector2d> s = getVector2dData(init_values, "s", 2);
+    shared_ptr<MatrixXd> range_c = getSquareMatrixXdData(init_values, "range_c", 2);
+
+    shared_ptr<Sensor> sensor = make_shared<Sensor>(P_D, lambda_c, *range_c);
+    shared_ptr<Transition2dTurn> transition_model = make_shared<Transition2dTurn>(T, sigma_v, sigma_omega);
+    shared_ptr<MeasurementRangeBearing> measurement_model = make_shared<MeasurementRangeBearing>(sigma_r, sigma_b, s);
+
+    PtrVecState states = make_shared<vector<shared_ptr<State>>>();
+
+    for(int i = 1; i <= 4; i++) {
+
+        QMap<QString, QString> state_values;
+        getDataFromFile(QString("debug_data/MOT/3_1/init_states_%1.txt").arg(i), state_values);
+        // getDataFromFile(QString("debug_data/MOT/3_2/init_states_%1.txt").arg(i), state_values);
+
+        shared_ptr<VectorXd> x = getVectorXdData(state_values, "var_x", 5);
+        shared_ptr<MatrixXd> P = getSquareMatrixXdData(state_values, "var_P", 5);
+
+        states->push_back(make_shared<State>(x, P));
+    }
+
+    shared_ptr<Estimator> estimator = make_shared<Estimator>(measurement_model, transition_model);
+    MultiTrackerMHT tracker(estimator, states, sensor, 13.8155, M, w_min);
+
+    for(int i = 1; i <= 20; i++) {
+
+        QMap<QString, QString> data_values;
+        getDataFromFile(QString("debug_data/MOT/3_1/%1.txt").arg(i), data_values);
+        // getDataFromFile(QString("debug_data/MOT/3_2/%1.txt").arg(i), data_values);
+
+        std::cout << "i: " << i << "--------------------------" << std::endl;
+        MatrixXd z = getMeasurementData(data_values);
+        tracker.step(z, (i == 14));
+    }
+}
 
 
 
