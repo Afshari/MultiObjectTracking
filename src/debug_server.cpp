@@ -7,6 +7,13 @@ DebugServer::DebugServer(const QQmlApplicationEngine &engine, QObject *parent) :
     connect(&server, &QTcpServer::newConnection, this, &DebugServer::newConnection);
 
     engine.rootContext()->setContextProperty("backend", &connectionHandler);
+    timerId = startTimer(5000);
+}
+
+void DebugServer::timerEvent(QTimerEvent *event) {
+
+    qDebug() << "Timer Run ...";
+    emit connectionHandler.recvData("Hi");
 }
 
 

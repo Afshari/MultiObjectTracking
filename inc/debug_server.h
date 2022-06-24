@@ -48,6 +48,9 @@ protected:
     UIConnectionHandler connectionHandler;
     unique_ptr<Tracker> tracker;
 
+    int timerId;
+    void timerEvent(QTimerEvent *event);
+
     void handleCap(const string &data);
     void handlePrune(const string &data);
     void handleNearestNeighbor(const string &data);

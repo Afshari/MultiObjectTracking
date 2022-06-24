@@ -152,11 +152,11 @@ Item {
         }
     }
 
-    Connections{
+    Connections {
         target: backend
 
         function onRecvData(text) {
-            // console.log("onRecvData " + text)
+            console.log("onRecvData " + text)
         }
         function onAddData(typeOfDraw, x, y) {
             // console.log("Received Data")

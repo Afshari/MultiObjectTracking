@@ -1,15 +1,34 @@
-import QtQuick 2.14
-import QtQuick.Controls 2.14
+import QtQuick 2.12
+import QtQml 2.12
+import QtQuick.Controls 2.12
 import "../controls"
+
 
 Item {
 
     QtObject {
         id: trackingParams
-        property variant points:        []
-        property variant line:          []
-        property variant clutters:      []
-        property variant measurements:  []
+        property variant points:                    []
+        property variant line:                      []
+        property variant clutters:                  []
+        property variant measurements:              []
+        property variant nearest_neighbor:          []
+        property variant pda:                       []
+        property variant gaussian_sum:              []
+    }
+
+    function drawPoints(ctx, items, color) {
+
+        var x = 0;
+        var y = 0;
+        for(var i = 0; i < items.length; i++) {
+            ctx.beginPath();
+            ctx.strokeStyle = color
+            x = items[i][0]
+            y = items[i][1]
+            ctx.arc(x, y, 5, 0, Math.PI * 2, false);
+            ctx.stroke();
+        }
     }
 
     QtObject {
@@ -30,7 +49,10 @@ Item {
             top: parent.top
             topMargin: 8
         }
-        property color paintColor: "#33B5E5"
+        property color paintColor:          "#33B5E5"
+        property color nearest_neighbor:    "#FF0000"
+        property color pda:                 "#00FF00"
+        property color gaussian_sum:        "#0000FF"
 
         ButtonLabel {
             id: btnClear
@@ -72,13 +94,15 @@ Item {
             btnText: "measure"
             btnIconSource: "../../ui/images/svg_images/measurement.svg"
             onClicked: {
+                console.log("Button Measure Clicked");
                 trackingParams.measurements = []
                 for(var i = 0; i < trackingParams.points.length; i++) {
                     var x = trackingParams.points[i][0] + (Math.random() - 0.5) * 30
                     var y = trackingParams.points[i][1] + (Math.random() - 0.5) * 30
                     trackingParams.measurements.push( [ parseInt(x), parseInt(y) ] )
                 }
-                canvas.requestPaint()
+                canvas.requestPaint();
+                backend.qmlCommand();
             }
         }
 
@@ -88,13 +112,15 @@ Item {
             btnIconSource: "../../ui/images/svg_images/run.svg"
             onClicked: {
                 // console.log( trackingParams.measurements )
-                var xs = [];
-                var ys = [];
-                for(var i = 0; i < trackingParams.measurements.length; i++) {
-                    xs.push( trackingParams.measurements[i][0] )
-                    ys.push( trackingParams.measurements[i][1] )
-                }
-                backend.getMeasurements( xs, ys )
+//                var xs = [];
+//                var ys = [];
+//                for(var i = 0; i < trackingParams.measurements.length; i++) {
+//                    xs.push( trackingParams.measurements[i][0] )
+//                    ys.push( trackingParams.measurements[i][1] )
+//                }
+                // backend.getMeasurements( xs, ys )
+                // backend.receiveFromQml("OK");
+                backend.qmlCommand("single");
             }
         }
 
@@ -136,14 +162,10 @@ Item {
                 ctx.stroke()
             }
 
-            for(i = 0; i < trackingParams.points.length; i++) {
-                ctx.beginPath();
-                ctx.fillStyle = colorTools.paintColor
-                x = trackingParams.points[i][0]
-                y = trackingParams.points[i][1]
-                ctx.arc(x, y, 5, 0, Math.PI * 2, false);
-                ctx.fill();
-            }
+            drawPoints(ctx, trackingParams.nearest_neighbor, colorTools.nearest_neighbor)
+            drawPoints(ctx, trackingParams.pda, colorTools.pda)
+            drawPoints(ctx, trackingParams.gaussian_sum, colorTools.gaussian_sum)
+
 
             for(i = 0; i < trackingParams.clutters.length; i++) {
                 ctx.beginPath();
@@ -203,6 +225,49 @@ Item {
         }
     }
 
+    Connections {
+
+        target: backend
+
+        onSingleTrackingAddItem: {
+            if(typeOfItem.valueOf() === "nearest_neighbor") {
+                trackingParams.nearest_neighbor.push( [ parseInt(x), parseInt(y) ] )
+            } else if(typeOfItem.valueOf() === "pda") {
+                trackingParams.pda.push( [ parseInt(x), parseInt(y) ] )
+            } else if(typeOfItem.valueOf() === "gaussian_sum") {
+                trackingParams.gaussian_sum.push( [ parseInt(x), parseInt(y) ] )
+            } else if(typeOfItem.valueOf() === "true_state") {
+                trackingParams.line.push( [ parseInt(x), parseInt(y) ] )
+            }
+            canvas.requestPaint()
+        }
+
+        onSingleTrackingAddData: {
+            if(typeOfDraw.valueOf() === "nearest_neighbor") {
+                trackingParams.nearest_neighbor = []
+                for(var i = 0; i < x.length; i++) {
+                    trackingParams.nearest_neighbor.push( [ parseInt(x[i]), parseInt(y[i]) ] )
+                }
+            } else if(typeOfDraw.valueOf() === "pda") {
+                trackingParams.pda = []
+                for(i = 0; i < x.length; i++) {
+                    trackingParams.pda.push( [ parseInt(x[i]), parseInt(y[i]) ] )
+                }
+            } else if(typeOfDraw.valueOf() === "gaussian_sum") {
+                trackingParams.gaussian_sum = []
+                for(i = 0; i < x.length; i++) {
+                    trackingParams.gaussian_sum.push( [ parseInt(x[i]), parseInt(y[i]) ] )
+                }
+            }
+            else if(typeOfDraw.valueOf() === "true_state") {
+                trackingParams.line = []
+                for(i = 0; i < x.length; i++) {
+                    trackingParams.line.push( [ parseInt(x[i]), parseInt(y[i]) ] )
+                }
+            }
+            canvas.requestPaint()
+        }
+    }
 
 }
 

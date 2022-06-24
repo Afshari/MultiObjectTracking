@@ -1,5 +1,8 @@
-import QtQuick 2.14
-import QtQuick.Controls 2.14
+import QtQuick 2.12
+import QtQml 2.12
+import QtQuick.Controls 2.12
+import QtQuick.Layouts 1.12
+import QtQuick.Controls.Styles 1.4
 import "../controls"
 
 Item {
@@ -12,6 +15,29 @@ Item {
         property variant curr_line:             []
         property variant clutters:              []
         property variant measurements:          []
+        property variant gnn:                   Array(4)
+        property variant jpda:                  Array(4)
+        property variant mht:                   Array(4)
+        property int number_of_birth:           0
+        property bool showGNN:                  true
+        property bool showJPDA:                 true
+        property bool showMHT:                  true
+    }
+
+    function drawPoints(ctx, items, color) {
+
+        var x = 0;
+        var y = 0;
+        for(var i = 0; i < trackingParams.number_of_birth; i++) {
+            for(var j = 0; j < items[i].length; j++) {
+                ctx.beginPath();
+                ctx.strokeStyle = color
+                x = items[i][j][0]
+                y = items[i][j][1]
+                ctx.arc(x, y, 5, 0, Math.PI * 2, false);
+                ctx.stroke();
+            }
+        }
     }
 
     QtObject {
@@ -32,7 +58,11 @@ Item {
             top: parent.top
             topMargin: 8
         }
-        property color paintColor: "#33B5E5"
+        property color paintColor:      "#33B5E5"
+        property color gnn:             "#FF0000"
+        property color jpda:            "#00FF00"
+        property color mht:             "#0000FF"
+
 
         ButtonLabel {
             id: btnClear
@@ -92,6 +122,74 @@ Item {
             }
         }
 
+        ButtonLabel {
+            id: btnRun
+            btnText: "Run"
+            btnIconSource: "../../ui/images/svg_images/run.svg"
+            onClicked: {
+                // console.log( trackingParams.measurements )
+//                var xs = [];
+//                var ys = [];
+//                for(var i = 0; i < trackingParams.measurements.length; i++) {
+//                    xs.push( trackingParams.measurements[i][0] )
+//                    ys.push( trackingParams.measurements[i][1] )
+//                }
+                // backend.getMeasurements( xs, ys )
+                // backend.receiveFromQml("OK");
+                backend.qmlCommand("multi");
+            }
+        }
+
+        CustomSwitch {
+            height: parent.height - 5
+            checked: true
+
+            Label {
+                text: "GNN"
+                color: "white"
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                anchors.bottom: parent.bottom
+            }
+            onCheckedChanged: {
+                trackingParams.showGNN = checked
+                canvas.requestPaint()
+            }
+        }
+        CustomSwitch {
+            height: parent.height - 5
+            checked: true
+
+            Label {
+                text: "JPDA"
+                color: "white"
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                anchors.bottom: parent.bottom
+            }
+            onCheckedChanged: {
+                trackingParams.showJPDA = checked
+                canvas.requestPaint()
+            }
+        }
+        CustomSwitch {
+            height: parent.height - 5
+            checked: true
+
+            Label {
+                text: "MHT"
+                color: "white"
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                anchors.bottom: parent.bottom
+            }
+            onCheckedChanged: {
+                trackingParams.showMHT = checked
+                canvas.requestPaint()
+            }
+        }
+
+
     }
 
     Canvas {
@@ -146,15 +244,10 @@ Item {
             }
 
 
-            // Draw Points
-            for(i = 0; i < trackingParams.curr_points.length; i++) {
-                ctx.beginPath();
-                ctx.fillStyle = colorTools.paintColor
-                x = trackingParams.curr_points[i][0]
-                y = trackingParams.curr_points[i][1]
-                ctx.arc(x, y, 5, 0, Math.PI * 2, false);
-                ctx.fill();
-            }
+            if(trackingParams.showGNN   == true) drawPoints(ctx, trackingParams.gnn, colorTools.gnn)
+            if(trackingParams.showJPDA  == true) drawPoints(ctx, trackingParams.jpda, colorTools.jpda)
+            if(trackingParams.showMHT   == true) drawPoints(ctx, trackingParams.mht, colorTools.mht)
+
 
             for(i = 0; i < trackingParams.points.length; i++) {
                 var curr_points = trackingParams.points[i]
@@ -232,6 +325,45 @@ Item {
         }
     }
 
+    Connections {
+
+        target: backend
+
+        onSetNumberOfBirth: {
+            trackingParams.number_of_birth  = nbirths
+            trackingParams.gnn              = Array(trackingParams.number_of_birth)
+            trackingParams.jpda             = Array(trackingParams.number_of_birth)
+            trackingParams.mht              = Array(trackingParams.number_of_birth)
+            trackingParams.lines            = Array(trackingParams.number_of_birth)
+            for(var i = 0; i < trackingParams.number_of_birth; i++) {
+                trackingParams.gnn[i]       = []
+                trackingParams.jpda[i]      = []
+                trackingParams.mht[i]       = []
+                trackingParams.lines[i]     = []
+            }
+        }
+
+        onMultiTrackingAddItem: {
+            if(typeOfItem.valueOf() === "gnn") {
+                for(var i = 0; i < trackingParams.number_of_birth; i++) {
+                    trackingParams.gnn[i].push( [ parseInt(x[i]), parseInt(y[i]) ] )
+                }
+            } else if(typeOfItem.valueOf() === "jpda") {
+                for(i = 0; i < trackingParams.number_of_birth; i++) {
+                    trackingParams.jpda[i].push( [ parseInt(x[i]), parseInt(y[i]) ] )
+                }
+            } else if(typeOfItem.valueOf() === "mht") {
+                for(i = 0; i < trackingParams.number_of_birth; i++) {
+                    trackingParams.mht[i].push( [ parseInt(x[i]), parseInt(y[i]) ] )
+                }
+            } else if(typeOfItem.valueOf() === "ground_truth") {
+                for(i = 0; i < trackingParams.number_of_birth; i++) {
+                    trackingParams.lines[i].push( [ parseInt(x[i]), parseInt(y[i]) ] )
+                }
+                canvas.requestPaint()
+            }
+        }
+    }
 }
 
 /*##^##

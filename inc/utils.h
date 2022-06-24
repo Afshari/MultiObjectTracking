@@ -1,7 +1,11 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef _UTILS_H_
+#define _UTILS_H_
 
 #include <QObject>
+#include <QFile>
+#include <QStringList>
+#include <QTextStream>
+#include <QDebug>
 #include <Eigen/Dense>
 #include <iostream>
 #include <stdarg.h>
@@ -12,6 +16,7 @@
 using Eigen::MatrixXd;
 using Eigen::MatrixXi;
 using Eigen::VectorXd;
+using Eigen::Vector2d;
 using Eigen::VectorXi;
 using Eigen::ArrayXi;
 using Eigen::Vector;
@@ -52,8 +57,32 @@ public:
     static shared_ptr<vector<double>> getWithIndices(const vector<double> &vec, const vector<int> &indices);
     static PtrVecState getWithIndices(const VecState &vec, const vector<int> &indices);
 
+    static void getDataFromFile(QString path, QMap<QString, QString>& values);
+    static shared_ptr<VectorXd> getVectorXdData(const QMap<QString, QString>& values, QString field_name, const int LEN);
+    static shared_ptr<Vector2d> getVector2dData(const QMap<QString, QString>& values, QString field_name, const int LEN);
+    static shared_ptr<MatrixXd> getSquareMatrixXdData(const QMap<QString, QString>& values, QString field_name, const int LEN);
+    static MatrixXd getMeasurementData(const QMap<QString, QString>& values, const string& field_name = "var_meas");
+
 };
 
 
 
-#endif // UTILS_H
+#endif // _UTILS_H_
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

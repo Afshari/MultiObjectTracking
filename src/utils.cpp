@@ -165,6 +165,66 @@ std::string Utils::matrixToStr(const MatrixXd& mat) {
 }
 
 
+void Utils::getDataFromFile(QString path, QMap<QString, QString>& values) {
+
+    QFile file(path);
+    if(!file.open(QIODevice::ReadOnly)) {
+        qDebug() << file.errorString();
+    }
+
+    QTextStream input(&file);
+
+    while(!input.atEnd()) {
+        QString line = input.readLine();
+        QStringList fields = line.split(":");
+        values[fields[1]] = fields[2];
+    }
+
+    file.close();
+}
+
+shared_ptr<VectorXd> Utils::getVectorXdData(const QMap<QString, QString>& values, QString field_name, const int LEN) {
+
+    QStringList lst = values[field_name].split(",");
+    shared_ptr<VectorXd> res = make_shared<VectorXd>(LEN);
+    for(int i = 0; i < LEN; i++)
+        (*res)(i, 0) = lst[i].toDouble();
+
+    return res;
+}
+
+shared_ptr<Vector2d> Utils::getVector2dData(const QMap<QString, QString>& values, QString field_name, const int LEN) {
+
+    shared_ptr<VectorXd> temp = getVectorXdData(values, field_name, LEN);
+    shared_ptr<Vector2d> res = make_shared<Vector2d>( (*temp)(0, 0), (*temp)(1, 0) );
+    return res;
+}
+
+shared_ptr<MatrixXd> Utils::getSquareMatrixXdData(const QMap<QString, QString>& values, QString field_name, const int LEN) {
+
+    QStringList lst = values[field_name].split(",");
+    shared_ptr<MatrixXd> res = make_shared<MatrixXd>(LEN, LEN);
+    for(int i = 0; i < LEN; i++)
+        for(int j = 0; j < LEN; j++)
+            (*res)(i, j) = lst[(i * LEN) + j].toDouble();
+
+    return res;
+}
+
+MatrixXd Utils::getMeasurementData(const QMap<QString, QString>& values, const string& field_name) {
+
+    QStringList lst_meas = values[QString::fromStdString(field_name)].split(",");
+    int sz_measurements = (lst_meas.size() - 1) / 2;
+    MatrixXd z(2, sz_measurements);
+    for(int i = 0; i < sz_measurements; i++) {
+        z(0, i) = lst_meas[i].toDouble();
+        z(1, i) = lst_meas[i + sz_measurements].toDouble();
+    }
+
+    return z;
+}
+
+
 
 
 

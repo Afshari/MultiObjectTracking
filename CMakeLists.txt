@@ -125,8 +125,10 @@ elseif( ${SET_RUN_TYPE} MATCHES ${SET_RUN_DEBUG} )
     add_definitions(-DRUN_TYPE=RUN_DEBUG)
     set(SOURCES ${SOURCES}
         src/debug_server.cpp
+        src/debug_run.cpp
         ui/src/ui_connection_handler.cpp
         inc/debug_server.h
+        inc/debug_run.h
         ui/inc/ui_connection_handler.h
         qml_debug.qrc
     )

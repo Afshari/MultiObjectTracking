@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>ui/main.qml</file>
-        <file>ui/controls/ToggleButton.qml</file>
         <file>ui/controls/TopBarButton.qml</file>
         <file>ui/controls/LeftMenuBtn.qml</file>
         <file>ui/controls/CustomTextField.qml</file>
@@ -36,5 +35,7 @@
         <file>ui/pages/singleObjectTracking.qml</file>
         <file>ui/pages/multiObjectTracking.qml</file>
         <file>ui/controls/ButtonLabel.qml</file>
+        <file>ui/controls/ToggleButton.qml</file>
+        <file>ui/controls/CustomSwitch.qml</file>
     </qresource>
 </RCC>
