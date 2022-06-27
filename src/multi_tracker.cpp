@@ -9,4 +9,6 @@ MultiTracker::MultiTracker(shared_ptr<Estimator> estimator, PtrVecState states, 
     this->gating_size   = gating_size;
     this->reduction_M   = reduction_M;
     this->w_min         = log(w_min);
+
+    this->print_result = false;
 }

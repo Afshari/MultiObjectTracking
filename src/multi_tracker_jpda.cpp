@@ -135,8 +135,10 @@ void MultiTrackerJPDA::step(const MatrixXd &z) {
         states->at(i) = make_shared<State>( make_shared<VectorXd>(x), make_shared<MatrixXd>(P) );
     }
 
-    for(uint i = 0; i < states->size(); i++) {
-        Utils::printEigen<VectorXd>(states->at(i)->getX(), "states");
+    if(print_result == true) {
+        for(uint i = 0; i < states->size(); i++) {
+            Utils::printEigen<VectorXd>(states->at(i)->getX(), "states");
+        }
     }
 
     //// 7. Predict
@@ -145,6 +147,10 @@ void MultiTrackerJPDA::step(const MatrixXd &z) {
     }
 }
 
+VectorXd MultiTrackerJPDA::getX(int idx) {
+
+    return states->at(idx)->getX();
+}
 
 
 

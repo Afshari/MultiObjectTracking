@@ -19,6 +19,7 @@ public:
                         shared_ptr<Sensor> sensor, double gating_size, int reduction_M,
                         double w_min = 0, QObject *parent = nullptr);
     virtual void step(const MatrixXd &z, bool debug = false);
+    virtual VectorXd getX(int idx);
 
 };
 

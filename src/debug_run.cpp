@@ -1,14 +1,94 @@
 #include "inc/debug_run.h"
 
-// [ ] - Read data from res.txt File
-// [ ] - Define 4 arrays in Javascript for 'NearestNeighbor, PDA, GaussianSum, GroundTruth'
-// [ ] -
+// [✓] - Read data from res.txt File
+// [✓] - Define 4 arrays in Javascript for 'NearestNeighbor, PDA, GaussianSum, GroundTruth'
+// [✓] - Show Measurements in UI
+// [ ] - Define function to initialize Trackers
+// [ ] - Define initialization variables as Class Members
+// [ ] - Write function in MultiTracker to getX by index of Object
+// [ ] - Add for-loop to 'initTrackers' to get result of 'tracker_mht' and compare to result in text file
+// [ ] - Show result of 'tracker_gnn' in UI
 
 
 DebugRun::DebugRun(const QQmlApplicationEngine &engine, QObject *parent) : QObject(parent) {
 
     // engine.rootContext()->setContextProperty("backend", &connectionHandler);
     engine.rootContext()->setContextProperty("backend", this);
+
+    data_path = "2_2";
+    initTrackers();
+}
+
+void DebugRun::initTrackers() {
+
+    QMap<QString, QString> init_values;
+    Utils::getDataFromFile(QString("debug_data/MOT/%1/init.txt").arg(data_path), init_values);
+
+    qDebug() << init_values;
+
+    int K = init_values["K"].toInt();
+    number_of_steps = K;
+    int M = init_values["M"].toInt();
+    float P_D = init_values["P_D"].toFloat();
+    // float P_G = init_values["P_G"].toFloat();
+    int T = init_values["T"].toInt();
+    int lambda_c = init_values["lambda_c"].toFloat();
+    // int mergeing_threshold = init_values["merging_threshold"].toInt();
+    nbirths = init_values["nbirths"].toInt();
+    float sigma_omega = init_values["sigmaOmega"].toFloat();
+    float sigma_v = init_values["sigmaV"].toFloat();
+    float sigma_b = init_values["sigma_b"].toFloat();
+    float sigma_r = init_values["sigma_r"].toFloat();
+    float w_min = init_values["w_min"].toFloat();
+
+    s = Utils::getVector2dData(init_values, "s", 2);
+    range_c = Utils::getSquareMatrixXdData(init_values, "range_c", 2);
+
+    sensor = make_shared<Sensor>(P_D, lambda_c, *range_c);
+    transition_model = make_shared<Transition2dTurn>(T, sigma_v, sigma_omega);
+    measurement_model = make_shared<MeasurementRangeBearing>(sigma_r, sigma_b, s);
+    estimator = make_shared<Estimator>(measurement_model, transition_model);
+
+
+    PtrVecState states = make_shared<vector<shared_ptr<State>>>();
+    for(int i = 1; i <= 4; i++) {
+
+        QMap<QString, QString> state_values;
+        Utils::getDataFromFile(QString("debug_data/MOT/%1/init_states_%2.txt").arg(data_path, QString::number(i)), state_values);
+
+        shared_ptr<VectorXd> x = Utils::getVectorXdData(state_values, "var_x", 5);
+        shared_ptr<MatrixXd> P = Utils::getSquareMatrixXdData(state_values, "var_P", 5);
+
+        states->push_back(make_shared<State>(x, P));
+    }
+    tracker_gnn = make_shared<MultiTrackerGNN>(estimator, states, sensor, GATING_SIZE, M, w_min);
+
+
+    states = make_shared<vector<shared_ptr<State>>>();
+    for(int i = 1; i <= 4; i++) {
+
+        QMap<QString, QString> state_values;
+        Utils::getDataFromFile(QString("debug_data/MOT/%1/init_states_%2.txt").arg(data_path, QString::number(i)), state_values);
+
+        shared_ptr<VectorXd> x = Utils::getVectorXdData(state_values, "var_x", 5);
+        shared_ptr<MatrixXd> P = Utils::getSquareMatrixXdData(state_values, "var_P", 5);
+
+        states->push_back(make_shared<State>(x, P));
+    }
+    tracker_jpda = make_shared<MultiTrackerJPDA>(estimator, states, sensor, GATING_SIZE, M, w_min);
+
+    states = make_shared<vector<shared_ptr<State>>>();
+    for(int i = 1; i <= 4; i++) {
+
+        QMap<QString, QString> state_values;
+        Utils::getDataFromFile(QString("debug_data/MOT/%1/init_states_%2.txt").arg(data_path, QString::number(i)), state_values);
+
+        shared_ptr<VectorXd> x = Utils::getVectorXdData(state_values, "var_x", 5);
+        shared_ptr<MatrixXd> P = Utils::getSquareMatrixXdData(state_values, "var_P", 5);
+
+        states->push_back(make_shared<State>(x, P));
+    }
+    tracker_mht = make_shared<MultiTrackerMHT>(estimator, states, sensor, GATING_SIZE, M, w_min);
 }
 
 void DebugRun::run() {
@@ -21,9 +101,9 @@ void DebugRun::run() {
     // handleNearestNeighbor();
     // handlePDA();
     // handleGaussianSum();
-    // handleGNN();
-    // handleJPDA();
-    // handleMHT();
+//    handleGNN();
+//    handleJPDA();
+//    handleMHT();
 }
 
 
@@ -43,6 +123,18 @@ void getPoints(const QMap<QString, QString>& values, const string& field_name, Q
     for(int i = 0; i < mat.cols(); i++) {
         x.append(x_mult_offset * (x_add_offset + mat(0, i)));
         y.append(y_mult_offset * (y_add_offset + mat(1, i)));
+    }
+}
+
+void polar2Cartesian(const QList<qreal>& r, const QList<qreal>& theta, QList<qreal>& x, QList<qreal>& y,
+                     int x_add_offset = 0, int y_add_offset = 0, float x_mult_offset = 1, float y_mult_offset = 1) {
+
+    if(x.size() > 0)    x.clear();
+    if(y.size() > 0)    y.clear();
+
+    for(int i = 0; i < r.size(); i++) {
+        x.append(x_mult_offset * (x_add_offset + (r[i] * cos(theta[i]))));
+        y.append(y_mult_offset * (y_add_offset + (r[i] * sin(theta[i]))));
     }
 }
 
@@ -73,9 +165,19 @@ void DebugRun::qmlCommand(QString type) {
 
         nbirths = init_values["nbirths"].toInt();
         number_of_steps = init_values["K"].toInt();
+        s = Utils::getVector2dData(init_values, "s", 2);
         emit setNumberOfBirth(nbirths);
         data_counter = 0;
         timerId = startTimer(50);
+
+    } else if(type_of_tracking == "jpda" || type_of_tracking == "gnn") {
+
+        emit setNumberOfBirth(nbirths);
+        data_counter = 0;
+        timerId = startTimer(50);
+
+    } else if(type_of_tracking == "stop") {
+        killTimer(timerId);
     }
 }
 
@@ -96,25 +198,129 @@ void DebugRun::timerEvent(QTimerEvent *event) {
 
         data_counter += 1;
         QMap<QString, QString> data_values;
-        Utils::getDataFromFile(QString("debug_data/MOT/sim/%1.txt").arg(data_counter), data_values);
+        Utils::getDataFromFile(QString("debug_data/MOT/2_1/%1.txt").arg(data_counter), data_values);
 
-        QList<qreal> x;
-        QList<qreal> y;
+        QList<qreal> x, y, r, theta;
 
         float x_mult_offset = 0.5;
         float y_mult_offset = 0.5;
-        int x_add_offset = 2000;
+        int x_add_offset = 1700;
         int y_add_offset = 700;
 
         getPoints(data_values, "var_gnn", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
         emit this->multiTrackingAddItem("gnn", x, y);
+
         getPoints(data_values, "var_jpda", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
         emit this->multiTrackingAddItem("jpda", x, y);
+
         getPoints(data_values, "var_mht", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
         emit this->multiTrackingAddItem("mht", x, y);
         getPoints(data_values, "var_x", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
         emit this->multiTrackingAddItem("ground_truth", x, y);
 
+        x_add_offset += (*s)(0, 0);
+        y_add_offset += (*s)(1, 0);
+        getPoints(data_values, "var_meas", r, theta);
+        polar2Cartesian(r, theta, x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
+        emit this->multiTrackingAddData("", x, y);
+
+
+        if(data_counter >= number_of_steps)
+            killTimer(timerId);
+
+    } else if(type_of_tracking == "jpda") {
+
+        data_counter += 1;
+        QList<qreal> x, y, r, theta;
+
+        float x_mult_offset = 0.5;
+        float y_mult_offset = 0.5;
+        int x_add_offset = 1700;
+        int y_add_offset = 1200;
+
+        QMap<QString, QString> data_values;
+        Utils::getDataFromFile(QString("debug_data/MOT/%1/%2.txt").arg(data_path, QString::number(data_counter)), data_values);
+
+        MatrixXd z = Utils::getMeasurementData(data_values);
+
+        tracker_jpda->step(z);
+        for(int i = 0; i < nbirths; i++) {
+            VectorXd state = tracker_jpda->getX(i);
+            x.append(x_mult_offset * (x_add_offset + state(0, 0)));
+            y.append(y_mult_offset * (y_add_offset + state(1, 0)));
+        }
+        emit this->multiTrackingAddItem("jpda", x, y);
+
+        x.clear();
+        y.clear();
+        tracker_gnn->step(z);
+        for(int i = 0; i < nbirths; i++) {
+            VectorXd state = tracker_gnn->getX(i);
+            x.append(x_mult_offset * (x_add_offset + state(0, 0)));
+            y.append(y_mult_offset * (y_add_offset + state(1, 0)));
+        }
+        emit this->multiTrackingAddItem("gnn", x, y);
+
+//        x.clear();
+//        y.clear();
+//        tracker_mht->step(z);
+//        for(int i = 0; i < nbirths; i++) {
+//            VectorXd state = tracker_mht->getX(i);
+//            x.append(x_mult_offset * (x_add_offset + state(0, 0)));
+//            y.append(y_mult_offset * (y_add_offset + state(1, 0)));
+//        }
+//        emit this->multiTrackingAddItem("mht", x, y);
+
+
+        getPoints(data_values, "var_x", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
+        emit this->multiTrackingAddItem("ground_truth", x, y);
+
+        x_add_offset += (*s)(0, 0);
+        y_add_offset += (*s)(1, 0);
+        getPoints(data_values, "var_meas", r, theta);
+        polar2Cartesian(r, theta, x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
+        emit this->multiTrackingAddData("", x, y);
+
+        emit this->multiTrackingAddItem("repaint", x, y);
+
+        if(data_counter >= number_of_steps)
+            killTimer(timerId);
+
+    } else if(type_of_tracking == "gnn") {
+
+        data_counter += 1;
+        QList<qreal> x, y, r, theta;
+
+        float x_mult_offset = 0.5;
+        float y_mult_offset = 0.5;
+        int x_add_offset = 1700;
+        int y_add_offset = 1200;
+
+        QMap<QString, QString> data_values;
+        Utils::getDataFromFile(QString("debug_data/MOT/%1/%2.txt").arg("1_1", QString::number(data_counter)), data_values);
+
+        qDebug() << "i: " << data_counter << "-------------------";
+        MatrixXd z = Utils::getMeasurementData(data_values);
+        tracker_gnn->step(z);
+
+        for(int i = 0; i < nbirths; i++) {
+            VectorXd state = tracker_gnn->getX(i);
+            x.append(x_mult_offset * (x_add_offset + state(0, 0)));
+            y.append(y_mult_offset * (y_add_offset + state(1, 0)));
+        }
+
+        emit this->multiTrackingAddItem("gnn", x, y);
+
+        getPoints(data_values, "var_x", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
+        emit this->multiTrackingAddItem("ground_truth", x, y);
+
+        x_add_offset += (*s)(0, 0);
+        y_add_offset += (*s)(1, 0);
+        getPoints(data_values, "var_meas", r, theta);
+        polar2Cartesian(r, theta, x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
+        emit this->multiTrackingAddData("", x, y);
+
+        emit this->multiTrackingAddItem("repaint", x, y);
 
         if(data_counter >= number_of_steps)
             killTimer(timerId);
@@ -430,27 +636,28 @@ void DebugRun::handleGaussianSum() {
 
 void DebugRun::handleGNN() {
 
+    QString path = "1_1";
     QMap<QString, QString> init_values;
-    Utils::getDataFromFile("debug_data/MOT/1_1/init.txt", init_values);
-    // Utils::getDataFromFile("debug_data/MOT/1_2/init.txt", init_values);
+    Utils::getDataFromFile(QString("debug_data/MOT/%1/init.txt").arg(path), init_values);
 
     qDebug() << init_values;
 
     int K = init_values["K"].toInt();
+    number_of_steps = K;
     int M = init_values["M"].toInt();
     float P_D = init_values["P_D"].toFloat();
-    float P_G = init_values["P_G"].toFloat();
+//    float P_G = init_values["P_G"].toFloat();
     int T = init_values["T"].toInt();
     int lambda_c = init_values["lambda_c"].toFloat();
-    int mergeing_threshold = init_values["merging_threshold"].toInt();
-    int nbirths = init_values["nbirths"].toInt();
+    // int mergeing_threshold = init_values["merging_threshold"].toInt();
+    nbirths = init_values["nbirths"].toInt();
     float sigma_omega = init_values["sigmaOmega"].toFloat();
     float sigma_v = init_values["sigmaV"].toFloat();
     float sigma_b = init_values["sigma_b"].toFloat();
     float sigma_r = init_values["sigma_r"].toFloat();
     float w_min = init_values["w_min"].toFloat();
 
-    shared_ptr<Vector2d> s = Utils::getVector2dData(init_values, "s", 2);
+    s = Utils::getVector2dData(init_values, "s", 2);
     shared_ptr<MatrixXd> range_c = Utils::getSquareMatrixXdData(init_values, "range_c", 2);
 
     shared_ptr<Sensor> sensor = make_shared<Sensor>(P_D, lambda_c, *range_c);
@@ -462,8 +669,7 @@ void DebugRun::handleGNN() {
     for(int i = 1; i <= 4; i++) {
 
         QMap<QString, QString> state_values;
-        Utils::getDataFromFile(QString("debug_data/MOT/1_1/init_states_%1.txt").arg(i), state_values);
-        // Utils::getDataFromFile(QString("debug_data/MOT/1_2/init_states_%1.txt").arg(i), state_values);
+        Utils::getDataFromFile(QString("debug_data/MOT/%1/init_states_%2.txt").arg(path, QString::number(i)), state_values);
 
         shared_ptr<VectorXd> x = Utils::getVectorXdData(state_values, "var_x", 5);
         shared_ptr<MatrixXd> P = Utils::getSquareMatrixXdData(state_values, "var_P", 5);
@@ -472,47 +678,47 @@ void DebugRun::handleGNN() {
     }
 
     shared_ptr<Estimator> estimator = make_shared<Estimator>(measurement_model, transition_model);
-    MultiTrackerGNN tracker(estimator, states, sensor, 13.8155, M, w_min);
+    tracker_gnn = make_shared<MultiTrackerGNN>(estimator, states, sensor, GATING_SIZE, M, w_min);
 
 
-    for(int i = 1; i <= 20; i++) {
+//    for(int i = 1; i <= K; i++) {
 
-        QMap<QString, QString> data_values;
-        Utils::getDataFromFile(QString("debug_data/MOT/1_1/%1.txt").arg(i), data_values);
-        // Utils::getDataFromFile(QString("debug_data/MOT/1_2/%1.txt").arg(i), data_values);
+//        QMap<QString, QString> data_values;
+//        Utils::getDataFromFile(QString("debug_data/MOT/%1/%2.txt").arg(path, QString::number(i)), data_values);
 
-        if(i == 13) {
-            qDebug() << "Start of Debugging ...";
-        }
-        std::cout << "i: " << i << "--------------------------" << std::endl;
-        MatrixXd z = Utils::getMeasurementData(data_values);
-        tracker.step(z, i == 13);
-    }
+//        if(i == 13) {
+//            qDebug() << "Start of Debugging ...";
+//        }
+//        std::cout << "i: " << i << "--------------------------" << std::endl;
+//        MatrixXd z = Utils::getMeasurementData(data_values);
+//        tracker_gnn->step(z);
+//    }
 }
 
 void DebugRun::handleJPDA() {
 
+    QString path = "2_1";
     QMap<QString, QString> init_values;
-    // Utils::getDataFromFile("debug_data/MOT/2_1/init.txt", init_values);
-    Utils::getDataFromFile("debug_data/MOT/2_2/init.txt", init_values);
+    Utils::getDataFromFile(QString("debug_data/MOT/%1/init.txt").arg(path), init_values);
 
     qDebug() << init_values;
 
     int K = init_values["K"].toInt();
+    number_of_steps = K;
     int M = init_values["M"].toInt();
     float P_D = init_values["P_D"].toFloat();
-    float P_G = init_values["P_G"].toFloat();
+//    float P_G = init_values["P_G"].toFloat();
     int T = init_values["T"].toInt();
     int lambda_c = init_values["lambda_c"].toFloat();
-    int mergeing_threshold = init_values["merging_threshold"].toInt();
-    int nbirths = init_values["nbirths"].toInt();
+//    int mergeing_threshold = init_values["merging_threshold"].toInt();
+    nbirths = init_values["nbirths"].toInt();
     float sigma_omega = init_values["sigmaOmega"].toFloat();
     float sigma_v = init_values["sigmaV"].toFloat();
     float sigma_b = init_values["sigma_b"].toFloat();
     float sigma_r = init_values["sigma_r"].toFloat();
     float w_min = init_values["w_min"].toFloat();
 
-    shared_ptr<Vector2d> s = Utils::getVector2dData(init_values, "s", 2);
+    s = Utils::getVector2dData(init_values, "s", 2);
     shared_ptr<MatrixXd> range_c = Utils::getSquareMatrixXdData(init_values, "range_c", 2);
 
     shared_ptr<Sensor> sensor = make_shared<Sensor>(P_D, lambda_c, *range_c);
@@ -524,8 +730,7 @@ void DebugRun::handleJPDA() {
     for(int i = 1; i <= 4; i++) {
 
         QMap<QString, QString> state_values;
-        // Utils::getDataFromFile(QString("debug_data/MOT/2_1/init_states_%1.txt").arg(i), state_values);
-        Utils::getDataFromFile(QString("debug_data/MOT/2_2/init_states_%1.txt").arg(i), state_values);
+        Utils::getDataFromFile(QString("debug_data/MOT/%1/init_states_%2.txt").arg(path, QString::number(i)), state_values);
 
         shared_ptr<VectorXd> x = Utils::getVectorXdData(state_values, "var_x", 5);
         shared_ptr<MatrixXd> P = Utils::getSquareMatrixXdData(state_values, "var_P", 5);
@@ -534,25 +739,24 @@ void DebugRun::handleJPDA() {
     }
 
     shared_ptr<Estimator> estimator = make_shared<Estimator>(measurement_model, transition_model);
-    MultiTrackerJPDA tracker(estimator, states, sensor, 13.8155, M, w_min);
+    tracker_jpda = make_shared<MultiTrackerJPDA>(estimator, states, sensor, GATING_SIZE, M, w_min);
 
-    for(int i = 1; i <= 20; i++) {
+//    for(int i = 1; i <= K; i++) {
 
-        QMap<QString, QString> data_values;
-        // Utils::getDataFromFile(QString("debug_data/MOT/2_1/%1.txt").arg(i), data_values);
-        Utils::getDataFromFile(QString("debug_data/MOT/2_2/%1.txt").arg(i), data_values);
+//        QMap<QString, QString> data_values;
+//        Utils::getDataFromFile(QString("debug_data/MOT/%1/%2.txt").arg(path, QString::number(i)), data_values);
 
-        std::cout << "i: " << i << "--------------------------" << std::endl;
-        MatrixXd z = Utils::getMeasurementData(data_values);
-        tracker.step(z);
-    }
+//        std::cout << "i: " << i << "--------------------------" << std::endl;
+//        MatrixXd z = Utils::getMeasurementData(data_values);
+//        tracker_jpda->step(z);
+//    }
 }
 
 void DebugRun::handleMHT() {
 
+    QString path = "3_1";
     QMap<QString, QString> init_values;
-    Utils::getDataFromFile("debug_data/MOT/3_1/init.txt", init_values);
-    // Utils::getDataFromFile("debug_data/MOT/3_2/init.txt", init_values);
+    Utils::getDataFromFile(QString("debug_data/MOT/%1/init.txt").arg(path), init_values);
 
     qDebug() << init_values;
 
@@ -582,8 +786,7 @@ void DebugRun::handleMHT() {
     for(int i = 1; i <= 4; i++) {
 
         QMap<QString, QString> state_values;
-        Utils::getDataFromFile(QString("debug_data/MOT/3_1/init_states_%1.txt").arg(i), state_values);
-        // Utils::getDataFromFile(QString("debug_data/MOT/3_2/init_states_%1.txt").arg(i), state_values);
+        Utils::getDataFromFile(QString("debug_data/MOT/%1/init_states_%2.txt").arg(path, QString::number(i)), state_values);
 
         shared_ptr<VectorXd> x = Utils::getVectorXdData(state_values, "var_x", 5);
         shared_ptr<MatrixXd> P = Utils::getSquareMatrixXdData(state_values, "var_P", 5);
@@ -594,16 +797,15 @@ void DebugRun::handleMHT() {
     shared_ptr<Estimator> estimator = make_shared<Estimator>(measurement_model, transition_model);
     MultiTrackerMHT tracker(estimator, states, sensor, 13.8155, M, w_min);
 
-    for(int i = 1; i <= 20; i++) {
+//    for(int i = 1; i <= 20; i++) {
 
-        QMap<QString, QString> data_values;
-        Utils::getDataFromFile(QString("debug_data/MOT/3_1/%1.txt").arg(i), data_values);
-        // Utils::getDataFromFile(QString("debug_data/MOT/3_2/%1.txt").arg(i), data_values);
+//        QMap<QString, QString> data_values;
+//        Utils::getDataFromFile(QString("debug_data/MOT/%1/%2.txt").arg(path, QString::number(i)), data_values);
 
-        std::cout << "i: " << i << "--------------------------" << std::endl;
-        MatrixXd z = Utils::getMeasurementData(data_values);
-        tracker.step(z, (i == 14));
-    }
+//        std::cout << "i: " << i << "--------------------------" << std::endl;
+//        MatrixXd z = Utils::getMeasurementData(data_values);
+//        tracker.step(z);
+//    }
 }
 
 

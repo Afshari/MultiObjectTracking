@@ -23,7 +23,7 @@ MultiTrackerMHT::MultiTrackerMHT(shared_ptr<Estimator> estimator, PtrVecState st
 }
 
 
-void MultiTrackerMHT::step(const MatrixXd &z, bool debug) {
+void MultiTrackerMHT::step(const MatrixXd &z) {
 
     int n = this->H_i->size();
     int m = z.cols();
@@ -62,13 +62,6 @@ void MultiTrackerMHT::step(const MatrixXd &z, bool debug) {
     MatrixXd new_z = z(Eigen::all, *Utils::setToArrayXi(set_gated_index));
     // Utils::printEigen<MatrixXd>(new_z, "new_z");
 
-    if(debug == true) {
-        int x = 0;
-        x += 1;
-        std::cout << "Dummy Print " << x << std::endl;
-        std::cout << "Start Debugging ..." << std::endl;
-    }
-
     NestedPtrVecState curr_H_i = make_shared<vector<PtrVecState>>(n);
     vector<VectorXd> curr_log_w_i(n);
     for(int i = 0; i < n; i++) {
@@ -97,10 +90,6 @@ void MultiTrackerMHT::step(const MatrixXd &z, bool debug) {
                     new_z_last_idx += 1;
                 }
 
-                if(debug == true) {
-                    Utils::printf("newidx: %d, lh: %d, m: %d, j: %d, n: %d", newidx, lh, m, j, n);
-                }
-
                 MatrixXd S = (*estimator->H(this->H_i->at(i)->at(lh)->getX())) *
                         this->H_i->at(i)->at(lh)->getP() *
                         estimator->H(this->H_i->at(i)->at(lh)->getX())->transpose();
@@ -112,12 +101,6 @@ void MultiTrackerMHT::step(const MatrixXd &z, bool debug) {
                 double formula_num_3 = formula_mat_1(0, 0);
 
                 curr_log_w_i[i](newidx, 0) = formula_num_1 + formula_num_2 + formula_num_3;
-                if(debug == true) {
-                    Utils::printEigen<VectorXd>(this->H_i->at(i)->at(lh)->getX(), "X");
-                    Utils::printf("size of z: %d, %d", new_z.rows(), new_z.cols());
-                    Utils::printEigen<MatrixXd>(new_z(Eigen::all, new_z_idx), "new z");
-                    Utils::printf("size of inner_H_i: %d", inner_H_i->size());
-                }
                 inner_H_i->at(newidx) = estimator->update(*this->H_i->at(i)->at(lh), new_z(Eigen::all, new_z_idx));
             }
             int newidx = (lh+1)*(m+1)-1;
@@ -246,7 +229,7 @@ void MultiTrackerMHT::step(const MatrixXd &z, bool debug) {
     }
 //    Utils::printEigen<MatrixXi>(*curr_H, "curr_H");
 
-    MatrixXd::Index best_index;
+    // MatrixXd::Index best_index;
     std::ignore = w_logs.maxCoeff(&best_index);
     std::cout << "best_index: " << best_index << std::endl;
 
@@ -254,11 +237,11 @@ void MultiTrackerMHT::step(const MatrixXd &z, bool debug) {
     this->H_i = curr_H_i;
     this->log_w = make_shared<VectorXd>(w_logs);
 
-    for(int i = 0; i < n; i++) {
-        Utils::printEigen<VectorXd>(curr_H_i->at(i)->at(best_index)->getX(), "state x");
+    if(print_result == true) {
+        for(int i = 0; i < n; i++) {
+            Utils::printEigen<VectorXd>(curr_H_i->at(i)->at(best_index)->getX(), "state x");
+        }
     }
-
-    NestedPtrVecState tt;
 
     for(int i = 0; i < n; i++) {
         int n_i = this->H_i->at(i)->size();
@@ -266,15 +249,13 @@ void MultiTrackerMHT::step(const MatrixXd &z, bool debug) {
             this->H_i->at(i)->at(lh) = estimator->predict(*this->H_i->at(i)->at(lh));
         }
     }
-
-//    std::cout << "/////////////////" << std::endl;
-//    for(int i = 0; i < n; i++) {
-//        Utils::printEigen<VectorXd>(curr_H_i->at(i)->at(best_index)->getX(), "state x");
-//    }
 }
 
 
+VectorXd MultiTrackerMHT::getX(int idx) {
 
+    return H_i->at(idx)->at(best_index)->getX();
+}
 
 
 

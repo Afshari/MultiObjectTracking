@@ -66,7 +66,7 @@ void MultiTrackerGNN::step(const MatrixXd &z, bool debug) {
         }
         L(i,m+i) = - log(1-sensor->get_P_D());
     }
-    // Utils::printEig<MatrixXd>(L, "L");
+    // Utils::printEigen<MatrixXd>(L, "L");
 
     Hungarian HungAlgo;
     vector<int> assignment;
@@ -81,8 +81,10 @@ void MultiTrackerGNN::step(const MatrixXd &z, bool debug) {
         }
     }
 
-    for(uint i = 0; i < states->size(); i++) {
-        Utils::printEigen<VectorXd>(states->at(i)->getX(), "states");
+    if(print_result == true) {
+        for(uint i = 0; i < states->size(); i++) {
+            Utils::printEigen<VectorXd>(states->at(i)->getX(), "states");
+        }
     }
 
     // Predict
@@ -91,7 +93,10 @@ void MultiTrackerGNN::step(const MatrixXd &z, bool debug) {
     }
 }
 
+VectorXd MultiTrackerGNN::getX(int idx) {
 
+    return states->at(idx)->getX();
+}
 
 
 

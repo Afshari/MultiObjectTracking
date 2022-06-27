@@ -17,6 +17,7 @@ public:
                               double w_min = 0, QObject *parent = nullptr);
 
     virtual void step(const MatrixXd &z);
+    virtual VectorXd getX(int idx);
 
 };
 

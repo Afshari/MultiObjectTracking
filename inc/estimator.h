@@ -23,6 +23,8 @@ using Eigen::Matrix;
 using Eigen::MatrixXd;
 using Eigen::ArrayXi;
 
+#define GATING_SIZE 13.8155
+
 class Estimator : public QObject {
     Q_OBJECT
 public:

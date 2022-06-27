@@ -49,14 +49,28 @@ protected:
     int number_of_steps;
     QString type_of_tracking;
     int data_counter;
-    QList<qreal> x_nn;
-    QList<qreal> y_nn;
-    QList<qreal> x_pda;
-    QList<qreal> y_pda;
-    QList<qreal> x_gs;
-    QList<qreal> y_gs;
-    QList<qreal> x_ground;
-    QList<qreal> y_ground;
+    QString data_path;
+
+
+    shared_ptr<MatrixXd> range_c;
+    shared_ptr<Vector2d> s;
+
+    shared_ptr<Sensor> sensor;
+    shared_ptr<Transition2dTurn> transition_model;
+    shared_ptr<MeasurementRangeBearing> measurement_model;
+    shared_ptr<Estimator> estimator;
+
+    shared_ptr<MultiTrackerGNN> tracker_gnn;
+    shared_ptr<MultiTrackerJPDA> tracker_jpda;
+    shared_ptr<MultiTrackerMHT> tracker_mht;
+
+    void initTrackers();
+
+
+    QList<qreal> x_nn,  y_nn;
+    QList<qreal> x_pda, y_pda;
+    QList<qreal> x_gs,  y_gs;
+    QList<qreal> x_ground, y_ground;
 
     void handleEllipsoidalGating();
     void handlePredictedLikelihood();
@@ -75,6 +89,7 @@ signals:
     void singleTrackingAddData(QString typeOfDraw, QList<qreal> x, QList<qreal> y);
     void singleTrackingAddItem(QString typeOfItem, qreal x, qreal y);
     void multiTrackingAddItem(QString typeOfItem,  QList<qreal> x, QList<qreal> y);
+    void multiTrackingAddData(QString typeOfItem,  QList<qreal> x, QList<qreal> y);
     void setNumberOfBirth(int nbirths);
 
 

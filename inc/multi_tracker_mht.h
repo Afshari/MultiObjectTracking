@@ -19,13 +19,15 @@ public:
                              shared_ptr<Sensor> sensor, double gating_size, int reduction_M,
                              double w_min = 0, QObject *parent = nullptr);
 
-    virtual void step(const MatrixXd &z, bool debug = false);
+    virtual void step(const MatrixXd &z);
+    virtual VectorXd getX(int idx);
 
 
 protected:
     shared_ptr<MatrixXi>    H;
     NestedPtrVecState       H_i;
     shared_ptr<VectorXd>    log_w;
+    MatrixXd::Index best_index;
 
 
 #if RUN_TYPE == RUN_DEBUG

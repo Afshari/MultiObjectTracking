@@ -22,6 +22,8 @@ Item {
         property bool showGNN:                  true
         property bool showJPDA:                 true
         property bool showMHT:                  true
+        property bool showMeasurement:          true
+        property bool showTruth:                true
     }
 
     function drawPoints(ctx, items, color) {
@@ -38,6 +40,15 @@ Item {
                 ctx.stroke();
             }
         }
+    }
+
+    function drawLegends(ctx, text_start_y, color, txt, TEXT_START_X, text_start_y, SYM_START_X) {
+
+        ctx.beginPath();
+        ctx.fillStyle = color;
+        ctx.fillText(txt, TEXT_START_X, text_start_y);
+        ctx.arc(SYM_START_X, text_start_y - 5, 5, 0, Math.PI * 2, false);
+        ctx.fill()
     }
 
     QtObject {
@@ -58,10 +69,11 @@ Item {
             top: parent.top
             topMargin: 8
         }
-        property color paintColor:      "#33B5E5"
+        property color truth:           "#33B5E5"
         property color gnn:             "#FF0000"
         property color jpda:            "#00FF00"
         property color mht:             "#0000FF"
+        property color measurement:     "white"
 
 
         ButtonLabel {
@@ -135,10 +147,20 @@ Item {
 //                    ys.push( trackingParams.measurements[i][1] )
 //                }
                 // backend.getMeasurements( xs, ys )
-                // backend.receiveFromQml("OK");
-                backend.qmlCommand("multi");
+                // backend.qmlCommand("multi");
+                backend.qmlCommand("jpda");
+                // backend.qmlCommand("gnn");
             }
         }
+        ButtonLabel {
+            id: btnStop
+            btnText: "Sop"
+            btnIconSource: "../../ui/images/svg_images/run.svg"
+            onClicked: {
+                backend.qmlCommand("stop");
+            }
+        }
+
 
         CustomSwitch {
             height: parent.height - 5
@@ -188,6 +210,40 @@ Item {
                 canvas.requestPaint()
             }
         }
+        CustomSwitch {
+            height: parent.height - 5
+            checked: true
+
+            Label {
+                text: "Measure"
+                color: "white"
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                anchors.bottom: parent.bottom
+            }
+            onCheckedChanged: {
+                trackingParams.showMeasurement = checked
+                canvas.requestPaint()
+            }
+        }
+        CustomSwitch {
+            height: parent.height - 5
+            checked: true
+
+            Label {
+                text: "Truth"
+                color: "white"
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                anchors.bottom: parent.bottom
+            }
+            onCheckedChanged: {
+                trackingParams.showTruth = checked
+                canvas.requestPaint()
+            }
+        }
+
+
 
 
     }
@@ -203,7 +259,7 @@ Item {
         }
         property real lastX
         property real lastY
-        property color color: colorTools.paintColor
+        property color color: colorTools.truth
 
         onPaint: {
             // console.log("onPaint")
@@ -227,19 +283,44 @@ Item {
                 ctx.stroke()
             }
 
-            for(i = 0; i < trackingParams.lines.length; i++) {
-                var curr_line = trackingParams.lines[i]
-                for(var j = 0; j < curr_line.length - 1; j++) {
-                    ctx.lineWidth = 3
-                    ctx.strokeStyle = canvas.color
-                    ctx.beginPath()
-                    x = curr_line[j][0]
-                    y = curr_line[j][1]
-                    ctx.moveTo(x, y)
-                    x = curr_line[j + 1][0]
-                    y = curr_line[j + 1][1]
-                    ctx.lineTo(x, y)
-                    ctx.stroke()
+            if(trackingParams.showMeasurement == true) {
+                for(i = 0; i < trackingParams.clutters.length; i++) {
+                    ctx.beginPath();
+                    ctx.fillStyle = colorTools.measurement
+                    x = trackingParams.clutters[i][0]
+                    y = trackingParams.clutters[i][1]
+                    ctx.arc(x, y, 3, 0, Math.PI * 2, false);
+                    ctx.fill();
+                }
+                for(i = 0; i < trackingParams.measurements.length; i++) {
+                    var curr_measurements = trackingParams.measurements[i]
+                    for(var j = 0; j < curr_measurements.length; j++) {
+                        ctx.beginPath();
+                        ctx.fillStyle = colorTools.measurement
+                        x = curr_measurements[j][0]
+                        y = curr_measurements[j][1]
+                        ctx.arc(x, y, 3, 0, Math.PI * 2, false);
+                        ctx.fill();
+                    }
+                }
+            }
+
+
+            if(trackingParams.showTruth == true) {
+                for(i = 0; i < trackingParams.lines.length; i++) {
+                    var curr_line = trackingParams.lines[i]
+                    for(j = 0; j < curr_line.length - 1; j++) {
+                        ctx.lineWidth = 3
+                        ctx.strokeStyle = canvas.color
+                        ctx.beginPath()
+                        x = curr_line[j][0]
+                        y = curr_line[j][1]
+                        ctx.moveTo(x, y)
+                        x = curr_line[j + 1][0]
+                        y = curr_line[j + 1][1]
+                        ctx.lineTo(x, y)
+                        ctx.stroke()
+                    }
                 }
             }
 
@@ -253,7 +334,7 @@ Item {
                 var curr_points = trackingParams.points[i]
                 for(j = 0; j < curr_points.length; j++) {
                     ctx.beginPath();
-                    ctx.fillStyle = colorTools.paintColor
+                    ctx.fillStyle = colorTools.truth
                     x = curr_points[j][0]
                     y = curr_points[j][1]
                     ctx.arc(x, y, 5, 0, Math.PI * 2, false);
@@ -261,28 +342,27 @@ Item {
                 }
             }
 
+            ctx.beginPath();
+            ctx.fillStyle = ctx.fillStyle = Qt.rgba(0.3, 0.3, 0.3, 1);
+            ctx.rect(parent.width - 180, 20, 150, 170);
+            ctx.fill();
 
-            for(i = 0; i < trackingParams.clutters.length; i++) {
-                ctx.beginPath();
-                ctx.fillStyle = "white"
-                x = trackingParams.clutters[i][0]
-                y = trackingParams.clutters[i][1]
-                ctx.arc(x, y, 3, 0, Math.PI * 2, false);
-                ctx.fill();
-            }
+            const TEXT_START_X = parent.width - 170;
+            const SYM_START_X  = parent.width - 50;
+            var text_start_y = 20;
+            ctx.font = '16px Verdana'
 
-            for(i = 0; i < trackingParams.measurements.length; i++) {
-                var curr_measurements = trackingParams.measurements[i]
-                for(j = 0; j < curr_measurements.length; j++) {
-                    ctx.beginPath();
-                    ctx.fillStyle = "white"
-                    x = curr_measurements[j][0]
-                    y = curr_measurements[j][1]
-                    ctx.arc(x, y, 3, 0, Math.PI * 2, false);
-                    ctx.fill();
-                }
-            }
 
+            text_start_y += 30;
+            drawLegends(ctx, text_start_y, colorTools.truth, "Truth", TEXT_START_X, text_start_y, SYM_START_X);
+            text_start_y += 30;
+            drawLegends(ctx, text_start_y, colorTools.measurement, "Measure", TEXT_START_X, text_start_y, SYM_START_X);
+            text_start_y += 30;
+            drawLegends(ctx, text_start_y, colorTools.gnn, "GNN", TEXT_START_X, text_start_y, SYM_START_X);
+            text_start_y += 30;
+            drawLegends(ctx, text_start_y, colorTools.jpda, "JPDA", TEXT_START_X, text_start_y, SYM_START_X);
+            text_start_y += 30;
+            drawLegends(ctx, text_start_y, colorTools.mht, "MHT", TEXT_START_X, text_start_y, SYM_START_X);
 
         }
 
@@ -360,8 +440,16 @@ Item {
                 for(i = 0; i < trackingParams.number_of_birth; i++) {
                     trackingParams.lines[i].push( [ parseInt(x[i]), parseInt(y[i]) ] )
                 }
+            } else if(typeOfItem.valueOf() === "repaint") {
                 canvas.requestPaint()
             }
+        }
+        onMultiTrackingAddData: {
+            // trackingParams.clutters = []
+            for(var i = 0; i < x.length; i++) {
+                trackingParams.clutters.push( [ parseInt(x[i]), parseInt(y[i]) ] )
+            }
+            canvas.requestPaint()
         }
     }
 }
