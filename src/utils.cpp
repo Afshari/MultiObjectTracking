@@ -211,6 +211,18 @@ shared_ptr<MatrixXd> Utils::getSquareMatrixXdData(const QMap<QString, QString>& 
     return res;
 }
 
+shared_ptr<MatrixXd> Utils::getRectangleMatrixXdData(const QMap<QString, QString>& values, QString field_name,
+                                                     const int ROW_LEN, const int COL_LEN) {
+
+    QStringList lst = values[field_name].split(",");
+    shared_ptr<MatrixXd> res = make_shared<MatrixXd>(ROW_LEN, COL_LEN);
+    for(int i = 0; i < ROW_LEN; i++)
+        for(int j = 0; j < COL_LEN; j++)
+            (*res)(i, j) = lst[(i * COL_LEN) + j].toDouble();
+
+    return res;
+}
+
 MatrixXd Utils::getMeasurementData(const QMap<QString, QString>& values, const string& field_name) {
 
     QStringList lst_meas = values[QString::fromStdString(field_name)].split(",");
@@ -224,7 +236,12 @@ MatrixXd Utils::getMeasurementData(const QMap<QString, QString>& values, const s
     return z;
 }
 
+pair<int, int> Utils::getLen(const QMap<QString, QString>& values, const string& field_name) {
 
+    QStringList lst_meas = values[QString::fromStdString(field_name)].split(",");
+    pair<int, int> result(lst_meas[0].toInt(), lst_meas[1].toInt());
+    return result;
+}
 
 
 

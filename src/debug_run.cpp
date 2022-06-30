@@ -3,11 +3,11 @@
 // [✓] - Read data from res.txt File
 // [✓] - Define 4 arrays in Javascript for 'NearestNeighbor, PDA, GaussianSum, GroundTruth'
 // [✓] - Show Measurements in UI
-// [ ] - Define function to initialize Trackers
-// [ ] - Define initialization variables as Class Members
-// [ ] - Write function in MultiTracker to getX by index of Object
+// [✓] - Define function to initialize Trackers
+// [✓] - Define initialization variables as Class Members
+// [✓] - Write function in MultiTracker to getX by index of Object
 // [ ] - Add for-loop to 'initTrackers' to get result of 'tracker_mht' and compare to result in text file
-// [ ] - Show result of 'tracker_gnn' in UI
+// [✓] - Show result of 'tracker_gnn' in UI
 
 
 DebugRun::DebugRun(const QQmlApplicationEngine &engine, QObject *parent) : QObject(parent) {
@@ -15,7 +15,10 @@ DebugRun::DebugRun(const QQmlApplicationEngine &engine, QObject *parent) : QObje
     // engine.rootContext()->setContextProperty("backend", &connectionHandler);
     engine.rootContext()->setContextProperty("backend", this);
 
-    data_path = "2_2";
+    data_path = "sim_c_40_PD_9";
+    // data_path = "1_1_c_20_PD_9";
+    // data_path = "1_1_c_200_PD_9"; // --> Bug in JPDA
+    // data_path = "1_2_c_30_PD_7"; --> Bad Result for GNN & JPDA
     initTrackers();
 }
 
@@ -101,9 +104,10 @@ void DebugRun::run() {
     // handleNearestNeighbor();
     // handlePDA();
     // handleGaussianSum();
-//    handleGNN();
-//    handleJPDA();
-//    handleMHT();
+    // handleGNN();
+    // handleJPDA();
+    // handleMHT();
+    // handleIndices();
 }
 
 
@@ -170,7 +174,7 @@ void DebugRun::qmlCommand(QString type) {
         data_counter = 0;
         timerId = startTimer(50);
 
-    } else if(type_of_tracking == "jpda" || type_of_tracking == "gnn") {
+    } else if(type_of_tracking == "multi_calc") {
 
         emit setNumberOfBirth(nbirths);
         data_counter = 0;
@@ -228,7 +232,7 @@ void DebugRun::timerEvent(QTimerEvent *event) {
         if(data_counter >= number_of_steps)
             killTimer(timerId);
 
-    } else if(type_of_tracking == "jpda") {
+    } else if(type_of_tracking == "multi_calc") {
 
         data_counter += 1;
         QList<qreal> x, y, r, theta;
@@ -238,12 +242,13 @@ void DebugRun::timerEvent(QTimerEvent *event) {
         int x_add_offset = 1700;
         int y_add_offset = 1200;
 
+        std::cout << "i: " << data_counter << "--------------------------" << std::endl;
         QMap<QString, QString> data_values;
         Utils::getDataFromFile(QString("debug_data/MOT/%1/%2.txt").arg(data_path, QString::number(data_counter)), data_values);
 
         MatrixXd z = Utils::getMeasurementData(data_values);
 
-        tracker_jpda->step(z);
+        tracker_jpda->step(z, data_counter==13);
         for(int i = 0; i < nbirths; i++) {
             VectorXd state = tracker_jpda->getX(i);
             x.append(x_mult_offset * (x_add_offset + state(0, 0)));
@@ -253,7 +258,7 @@ void DebugRun::timerEvent(QTimerEvent *event) {
 
         x.clear();
         y.clear();
-        tracker_gnn->step(z);
+        tracker_gnn->step(z, data_counter >= 1);
         for(int i = 0; i < nbirths; i++) {
             VectorXd state = tracker_gnn->getX(i);
             x.append(x_mult_offset * (x_add_offset + state(0, 0)));
@@ -261,55 +266,15 @@ void DebugRun::timerEvent(QTimerEvent *event) {
         }
         emit this->multiTrackingAddItem("gnn", x, y);
 
-//        x.clear();
-//        y.clear();
-//        tracker_mht->step(z);
-//        for(int i = 0; i < nbirths; i++) {
-//            VectorXd state = tracker_mht->getX(i);
-//            x.append(x_mult_offset * (x_add_offset + state(0, 0)));
-//            y.append(y_mult_offset * (y_add_offset + state(1, 0)));
-//        }
-//        emit this->multiTrackingAddItem("mht", x, y);
-
-
-        getPoints(data_values, "var_x", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
-        emit this->multiTrackingAddItem("ground_truth", x, y);
-
-        x_add_offset += (*s)(0, 0);
-        y_add_offset += (*s)(1, 0);
-        getPoints(data_values, "var_meas", r, theta);
-        polar2Cartesian(r, theta, x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
-        emit this->multiTrackingAddData("", x, y);
-
-        emit this->multiTrackingAddItem("repaint", x, y);
-
-        if(data_counter >= number_of_steps)
-            killTimer(timerId);
-
-    } else if(type_of_tracking == "gnn") {
-
-        data_counter += 1;
-        QList<qreal> x, y, r, theta;
-
-        float x_mult_offset = 0.5;
-        float y_mult_offset = 0.5;
-        int x_add_offset = 1700;
-        int y_add_offset = 1200;
-
-        QMap<QString, QString> data_values;
-        Utils::getDataFromFile(QString("debug_data/MOT/%1/%2.txt").arg("1_1", QString::number(data_counter)), data_values);
-
-        qDebug() << "i: " << data_counter << "-------------------";
-        MatrixXd z = Utils::getMeasurementData(data_values);
-        tracker_gnn->step(z);
-
+        x.clear();
+        y.clear();
+        tracker_mht->step(z);
         for(int i = 0; i < nbirths; i++) {
-            VectorXd state = tracker_gnn->getX(i);
+            VectorXd state = tracker_mht->getX(i);
             x.append(x_mult_offset * (x_add_offset + state(0, 0)));
             y.append(y_mult_offset * (y_add_offset + state(1, 0)));
         }
-
-        emit this->multiTrackingAddItem("gnn", x, y);
+        emit this->multiTrackingAddItem("mht", x, y);
 
         getPoints(data_values, "var_x", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
         emit this->multiTrackingAddItem("ground_truth", x, y);
@@ -754,7 +719,7 @@ void DebugRun::handleJPDA() {
 
 void DebugRun::handleMHT() {
 
-    QString path = "3_1";
+    QString path = "3_1_c_10_PD_9";
     QMap<QString, QString> init_values;
     Utils::getDataFromFile(QString("debug_data/MOT/%1/init.txt").arg(path), init_values);
 
@@ -763,10 +728,10 @@ void DebugRun::handleMHT() {
     int K = init_values["K"].toInt();
     int M = init_values["M"].toInt();
     float P_D = init_values["P_D"].toFloat();
-    float P_G = init_values["P_G"].toFloat();
+    // float P_G = init_values["P_G"].toFloat();
     int T = init_values["T"].toInt();
     int lambda_c = init_values["lambda_c"].toFloat();
-    int mergeing_threshold = init_values["merging_threshold"].toInt();
+//    int mergeing_threshold = init_values["merging_threshold"].toInt();
     int nbirths = init_values["nbirths"].toInt();
     float sigma_omega = init_values["sigmaOmega"].toFloat();
     float sigma_v = init_values["sigmaV"].toFloat();
@@ -783,7 +748,7 @@ void DebugRun::handleMHT() {
 
     PtrVecState states = make_shared<vector<shared_ptr<State>>>();
 
-    for(int i = 1; i <= 4; i++) {
+    for(int i = 1; i <= nbirths; i++) {
 
         QMap<QString, QString> state_values;
         Utils::getDataFromFile(QString("debug_data/MOT/%1/init_states_%2.txt").arg(path, QString::number(i)), state_values);
@@ -796,16 +761,135 @@ void DebugRun::handleMHT() {
 
     shared_ptr<Estimator> estimator = make_shared<Estimator>(measurement_model, transition_model);
     MultiTrackerMHT tracker(estimator, states, sensor, 13.8155, M, w_min);
+    tracker.enablePrintResult();
 
-//    for(int i = 1; i <= 20; i++) {
+    for(int i = 1; i <= K; i++) {
 
-//        QMap<QString, QString> data_values;
-//        Utils::getDataFromFile(QString("debug_data/MOT/%1/%2.txt").arg(path, QString::number(i)), data_values);
+        QMap<QString, QString> data_values;
+        Utils::getDataFromFile(QString("debug_data/MOT/%1/%2.txt").arg(path, QString::number(i)), data_values);
 
-//        std::cout << "i: " << i << "--------------------------" << std::endl;
-//        MatrixXd z = Utils::getMeasurementData(data_values);
-//        tracker.step(z);
-//    }
+        std::cout << "Tacker index: " << i << "--------------------------" << std::endl;
+        MatrixXd z = Utils::getMeasurementData(data_values);
+        tracker.step(z, i == 5);
+    }
 }
+
+void DebugRun::handleIndices() {
+
+    QString path = "mht_index";
+    QMap<QString, QString> init_values;
+
+    for(int k = 1; k <= 6; k++) {
+
+        std::cout << "k: " << k << "------------------------" << std::endl;
+        Utils::getDataFromFile(QString("debug_data/MOT/%1/indices_%2.txt").arg(path, QString::number(k)), init_values);
+        int n = init_values["n"].toInt();
+        // qDebug() << init_values;
+        MatrixXd pre_z = Utils::getMeasurementData(init_values, "pre_z");
+        MatrixXd z = Utils::getMeasurementData(init_values, "z");
+        // std::cout << z << std::endl;
+        // qDebug () << z.cols();
+        pair<int, int> LEN = Utils::getLen(init_values, "sz_pre_idx_z_ingate");
+        // qDebug() << LEN.first << ", " << LEN.second;
+        MatrixXd pre_idx_z = *Utils::getRectangleMatrixXdData(init_values, "pre_idx_z_ingate", LEN.first, LEN.second);
+        // std::cout << pre_idx_z << std::endl;
+        std::set<int> set_gated_index;
+        vector<vector<ArrayXi>> gated_index;
+
+
+        int j = 0;
+        for(int i = 0; i < n; i++) {
+            QMap<QString, QString> new_indices_values;
+            Utils::getDataFromFile(QString("debug_data/MOT/%1/new_indices_%2_%3.txt").arg(
+                                       path, QString::number(k), QString::number(i+1)), new_indices_values);
+            int n_i = new_indices_values["n_i"].toInt();
+
+            vector<ArrayXi> inner_gated_index;
+            for(int lh = 0; lh < n_i; lh++) {
+                int arr_len = (pre_idx_z(Eigen::all, j).array() > 0).colwise().count()[0];
+                ArrayXi curr_gated_index(arr_len);
+
+                int l = 0;
+                for(int k = 0; k < pre_idx_z.rows(); k++) {
+                    if(pre_idx_z(k, j) != 0) {
+                        set_gated_index.insert(k);
+                        curr_gated_index(l) = k;
+                        l += 1;
+                    }
+                }
+                inner_gated_index.push_back(curr_gated_index);
+                j += 1;
+            }
+            gated_index.push_back(inner_gated_index);
+        }
+
+
+//        for(int j = 0; j < pre_idx_z.cols(); j++) {
+//            int l = 0;
+//            for(int k = 0; k < pre_idx_z.rows(); k++) {
+//                if(pre_idx_z(k, j) != 0) {
+//                    set_gated_index.insert(k);
+//                }
+//            }
+//        }
+//        for (auto const& index : set_gated_index)
+//            std::cout << index << " ";
+//        std::cout << std::endl << "-----------------------------" << std::endl;
+        int m = z.cols();
+        vector<int> all_indices(m);
+        std::generate(all_indices.begin(), all_indices.end(), [n = 0]() mutable { return n++; });
+        set<int> set_all_indices(all_indices.begin(), all_indices.end());
+        std::set<int> set_clutter_indices;
+        std::set_difference(set_all_indices.begin(), set_all_indices.end(),
+                            set_gated_index.begin(), set_gated_index.end(),
+                            std::inserter(set_clutter_indices, set_clutter_indices.end()));
+
+//        for (auto const& index : set_clutter_indices)
+//            std::cout << index << " ";
+//        std::cout << std::endl;
+        vector<int> vec_gated_index(set_gated_index.begin(), set_gated_index.end());
+        sort(vec_gated_index.begin(), vec_gated_index.end());
+        std::map<int, int> L_indices;
+        for(int i = 0; i < set_gated_index.size(); i++) {
+            L_indices[vec_gated_index[i]] = i;
+        }
+
+        for(int i = 0; i < n; i++) {
+            std::cout << "############" << std::endl;
+            // std::cout << "n: " << n << std::endl;
+            // int n_i = this->H_i->at(i)->size();
+            QMap<QString, QString> new_indices_values;
+            Utils::getDataFromFile(QString("debug_data/MOT/%1/new_indices_%2_%3.txt").arg(
+                                       path, QString::number(k), QString::number(i+1)), new_indices_values);
+            int n_i = new_indices_values["n_i"].toInt();
+            // std::cout << "n_i: " << n_i << std::endl;
+
+            std::cout << "newidx: \t";
+            for(int lh = 0; lh < n_i; lh++) {
+
+                for(int p = 0; p < gated_index[i][lh].rows(); p++) {
+                    int j = gated_index[i][lh](p, 0);
+                    // std::cout << "j: " << j << std::endl;
+                    int L_idx = L_indices[j];
+                    // std::cout << "L_idx: " << L_idx << std::endl;
+                    int newidx = (lh)*(m+1) + L_idx;
+                    std::cout << (newidx + 1) << " ";
+
+                }
+                int newidx = (lh+1)*(m+1)-1;
+                std::cout << (newidx + 1) << " ";
+            }
+            std::cout << std::endl;
+            std::cout << "ref file: \t" << new_indices_values["new_indices"].toStdString() << std::endl;
+        }
+
+
+    }
+
+}
+
+
+
+
 
 

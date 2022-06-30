@@ -83,6 +83,7 @@ protected:
     void handleGNN();
     void handleJPDA();
     void handleMHT();
+    void handleIndices();
 
 
 signals:

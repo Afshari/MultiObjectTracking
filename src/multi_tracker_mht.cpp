@@ -1,5 +1,6 @@
 #include "inc/multi_tracker_mht.h"
 
+
 MultiTrackerMHT::MultiTrackerMHT(shared_ptr<Estimator> estimator, PtrVecState states,
                                    shared_ptr<Sensor> sensor, double gating_size, int reduction_M,
                                    double w_min, QObject *parent) :
@@ -22,15 +23,9 @@ MultiTrackerMHT::MultiTrackerMHT(shared_ptr<Estimator> estimator, PtrVecState st
     }
 }
 
+void MultiTrackerMHT::ellipsoidalGating(vector<vector<ArrayXi>>& gated_index, std::set<int>& set_gated_index,
+                                        const MatrixXd &z, int n) {
 
-void MultiTrackerMHT::step(const MatrixXd &z) {
-
-    int n = this->H_i->size();
-    int m = z.cols();
-
-    //// 1. Ellipsoidal Gating
-    vector<vector<ArrayXi>> gated_index;
-    std::set<int> set_gated_index;
     for(int i = 0; i < n; i++) {
         int n_i = this->H_i->at(i)->size();
         // Utils::printf("n_i: %d", n_i);
@@ -47,23 +42,19 @@ void MultiTrackerMHT::step(const MatrixXd &z) {
         }
         gated_index.push_back(inner_gated_index);
     }
-    std::cout << "End of Ellipsoidal Gating ..." << std::endl;
+}
 
-    vector<int> all_indices(m);
-    std::generate(all_indices.begin(), all_indices.end(), [n = 0]() mutable { return n++; });
-    set<int> set_all_indices(all_indices.begin(), all_indices.end());
-    std::set<int> set_clutter_indices;
-    std::set_difference(set_all_indices.begin(), set_all_indices.end(),
-                        set_gated_index.begin(), set_gated_index.end(),
-                        std::inserter(set_clutter_indices, set_clutter_indices.end()));
+void MultiTrackerMHT::generate_H_w_i(NestedPtrVecState& curr_H_i, vector<VectorXd>& curr_log_w_i, MatrixXd& new_z,
+                                     vector<vector<ArrayXi>>& gated_index, std::set<int>& set_gated_index,
+                                     const MatrixXd &z, int m, int n) {
 
-    m = set_gated_index.size();
-    // Utils::printf("m: %d", m);
-    MatrixXd new_z = z(Eigen::all, *Utils::setToArrayXi(set_gated_index));
-    // Utils::printEigen<MatrixXd>(new_z, "new_z");
+    vector<int> vec_gated_index(set_gated_index.begin(), set_gated_index.end());
+    sort(vec_gated_index.begin(), vec_gated_index.end());
+    std::map<int, int> L_indices;
+    for(int i = 0; i < set_gated_index.size(); i++) {
+        L_indices[vec_gated_index[i]] = i;
+    }
 
-    NestedPtrVecState curr_H_i = make_shared<vector<PtrVecState>>(n);
-    vector<VectorXd> curr_log_w_i(n);
     for(int i = 0; i < n; i++) {
         int n_i = this->H_i->at(i)->size();
 
@@ -71,24 +62,26 @@ void MultiTrackerMHT::step(const MatrixXd &z) {
         PtrVecState inner_H_i = make_shared<VecState>(n_i*(m+1));
         for(int lh = 0; lh < n_i; lh++) {
 
-            int H_i_last_idx = 0;
-            int new_z_last_idx = 0;
+//            int H_i_last_idx = 0;
+//            int new_z_last_idx = 0;
             for(int k = 0; k < gated_index[i][lh].rows(); k++) {
                 int j = gated_index[i][lh](k, 0);
-                int newidx = (lh)*(m+1) + j;
-                int new_z_idx = j;
-                if(newidx < n_i*(m+1)) {
-                    H_i_last_idx = newidx;
-                } else {
-                    H_i_last_idx += 1;
-                    newidx = H_i_last_idx;
-                }
-                if(j < m) {
-                    new_z_last_idx = j;
-                } else {
-                    new_z_idx = new_z_last_idx;
-                    new_z_last_idx += 1;
-                }
+                // int newidx = (lh)*(m+1) + j;
+                int L_idx = L_indices[j];
+                int newidx = (lh)*(m+1) + L_idx;
+//                int new_z_idx = j;
+//                if(newidx < n_i*(m+1)) {
+//                    H_i_last_idx = newidx;
+//                } else {
+//                    H_i_last_idx += 1;
+//                    newidx = H_i_last_idx;
+//                }
+//                if(j < m) {
+//                    new_z_last_idx = j;
+//                } else {
+//                    new_z_idx = new_z_last_idx;
+//                    new_z_last_idx += 1;
+//                }
 
                 MatrixXd S = (*estimator->H(this->H_i->at(i)->at(lh)->getX())) *
                         this->H_i->at(i)->at(lh)->getP() *
@@ -101,84 +94,65 @@ void MultiTrackerMHT::step(const MatrixXd &z) {
                 double formula_num_3 = formula_mat_1(0, 0);
 
                 curr_log_w_i[i](newidx, 0) = formula_num_1 + formula_num_2 + formula_num_3;
-                inner_H_i->at(newidx) = estimator->update(*this->H_i->at(i)->at(lh), new_z(Eigen::all, new_z_idx));
+                inner_H_i->at(newidx) = estimator->update(*this->H_i->at(i)->at(lh), new_z(Eigen::all, L_idx));
             }
+            // int newidx = (lh+1)*(m+1)-1;
             int newidx = (lh+1)*(m+1)-1;
             curr_log_w_i[i](newidx, 0) = log( 1 - sensor->get_P_D() );
             inner_H_i->at(newidx) = this->H_i->at(i)->at(lh);
         }
-        // Utils::printEigen<VectorXd>(curr_log_w_i[i], "curr_log_w_i[i]");
         curr_H_i->at(i) = inner_H_i;
-//        for(uint k = 0; k < inner_H_i->size(); k++) {
-//            if(inner_H_i->at(k) != nullptr)
-//                Utils::printEigen<VectorXd>(inner_H_i->at(k)->getX(), "x");
-//        }
     }
-    std::cout << "End of Creating curr_H_i ... " << std::endl;
+}
 
-    vector<vector<int>> vec_H;
-    vector<double> vec_w_logs;
+void MultiTrackerMHT::generateCostMatrix(MatrixXd& L, const vector<VectorXd>& curr_log_w_i, int h, int n, int m) {
 
-    for(int h = 0; h < this->H->rows(); h++) {
+    for(int i = 0; i < n; i++) {
 
-        MatrixXd L = MatrixXd::Constant(n, n+m, std::numeric_limits<double>::infinity());
+        int startingidx = (*this->H)(h, i) * (m+1);
+        int finalidx    = ((*this->H)(h, i) + 1) * (m+1) - 2;
+        L.block(i, 0, 1, m) = -curr_log_w_i[i].block(startingidx, 0, finalidx-startingidx+1, 1).transpose();
+        L(i, m+i) = -curr_log_w_i[i]( finalidx+1, 0 );
+    }
+}
+
+void MultiTrackerMHT::runMurty(vector<vector<int>>& vec_H, vector<double>& vec_w_logs, const MatrixXd& L,
+                               int h, int n, int m) {
+
+    Murty murty(L);
+    double cost;
+    Assignment sol;
+    vector<double> inner_vec_w_logs;
+    vector<Assignment> assignment;
+    int counter = 0;
+
+    while(counter < this->reduction_M) {
+        counter += 1;
+        bool res = murty.draw(sol, cost);
+
+        if(!res)  break;
+
+        vec_w_logs.push_back(-cost + (*this->log_w)(h, 0) );
+        inner_vec_w_logs.push_back(-cost + (*this->log_w)(h, 0) );
+        // Utils::printEigen<MatrixXi>(sol, "sol");
+        sol = (sol.array() > m).select(m, sol);
+        assignment.push_back(sol);
+    }
+    assignment = *Hypothesis().sort(assignment, inner_vec_w_logs);
+    int M = assignment.size();
+
+    for(int iM = 0; iM < M; iM++) {
+        vector<int> inner_H;
         for(int i = 0; i < n; i++) {
-
-            int startingidx = (*this->H)(h, i) * (m+1);
-            int finalidx    = ((*this->H)(h, i) + 1) * (m+1) - 2;
-//            Utils::printf("m: %d       value: %d", m, (*this->H)(h, i));
-//            Utils::printf("startingidx: %d       finalidx: %d", startingidx, finalidx);
-            L.block(i, 0, 1, m) = -curr_log_w_i[i].block(startingidx, 0, finalidx-startingidx+1, 1).transpose();
-            L(i, m+i) = -curr_log_w_i[i]( finalidx+1, 0 );
+            int rs = (*this->H)(h, i) * (m+1) + assignment.at(iM)(i, 0);
+            inner_H.push_back( rs );
         }
-        // std::cout << "End of Creating Cost Function ... index: " << h << std::endl;
-        // Utils::printEigen<MatrixXd>(L, "L");
-
-        //// 3. Run Murty Algorithm
-        Murty murty(L);
-        double cost;
-        Assignment sol;
-        vector<double> inner_vec_w_logs;
-        vector<Assignment> assignment;
-        int counter = 0;
-
-        while(counter < this->reduction_M) {
-            counter += 1;
-            bool res = murty.draw(sol, cost);
-
-            if(!res)  break;
-
-            vec_w_logs.push_back(-cost + (*this->log_w)(h, 0) );
-            inner_vec_w_logs.push_back(-cost + (*this->log_w)(h, 0) );
-            // Utils::printEigen<MatrixXi>(sol, "sol");
-            sol = (sol.array() > m).select(m, sol);
-            assignment.push_back(sol);
-        }
-        assignment = *Hypothesis().sort(assignment, inner_vec_w_logs);
-        int M = assignment.size();
-
-        for(int iM = 0; iM < M; iM++) {
-            vector<int> inner_H;
-            for(int i = 0; i < n; i++) {
-                int rs = (*this->H)(h, i) * (m+1) + assignment.at(iM)(i, 0);
-                inner_H.push_back( rs );
-            }
-            vec_H.push_back( inner_H );
-        }
+        vec_H.push_back( inner_H );
     }
+}
 
-    shared_ptr<MatrixXi> curr_H = make_shared<MatrixXi>();
-    curr_H->resize(vec_H.size(), n);
-
-    for(uint i = 0; i < vec_H.size(); i++) {
-        for(int j = 0; j < n; j++) {
-            (*curr_H)(i, j) = vec_H[i][j];
-        }
-    }
-
-    auto normalizeOutput = Hypothesis().normalizeLogWeights(vec_w_logs);
-    VectorXd w_logs = *std::get<0>(normalizeOutput);
-//    Utils::printEigen<VectorXd>(w_logs, "w_logs");
+void MultiTrackerMHT::prune(shared_ptr<MatrixXi>& curr_H, VectorXd& w_logs,
+                            tuple<shared_ptr<VectorXd>, double>& normalizeOutput, const vector<double>& vec_w_logs) {
 
     vector<int> hyp(vec_w_logs.size());
     std::generate(hyp.begin(), hyp.end(), [n = 0]() mutable { return n++; });
@@ -187,8 +161,6 @@ void MultiTrackerMHT::step(const MatrixXd &z) {
     auto pruneResult = Hypothesis().prune(hyp, w_logs, this->w_min);
     w_logs = *std::get<0>(pruneResult);
     hyp = *std::get<1>(pruneResult);
-//    Utils::printEigen<VectorXd>(w_logs, "w_logs");
-//    Utils::print<int>(hyp, "hyp");
 
     curr_H = Hypothesis::getWithIndices(curr_H, hyp);
 
@@ -202,12 +174,88 @@ void MultiTrackerMHT::step(const MatrixXd &z) {
     hyp = *std::get<1>(capResult);
 
     curr_H = Hypothesis::getWithIndices(curr_H, hyp);
-//    Utils::printEigen<MatrixXi>(*curr_H, "curr_H");
-
     normalizeOutput = Hypothesis().normalizeLogWeights(w_logs);
     w_logs = *std::get<0>(normalizeOutput);
+}
 
-    // Utils::printEigen<VectorXd>(w_logs, "w_logs");
+void MultiTrackerMHT::predict(int n) {
+
+    for(int i = 0; i < n; i++) {
+        int n_i = this->H_i->at(i)->size();
+        for(int lh = 0; lh < n_i; lh++) {
+            this->H_i->at(i)->at(lh) = estimator->predict(*this->H_i->at(i)->at(lh));
+        }
+    }
+}
+
+void MultiTrackerMHT::step(const MatrixXd &z, bool debug) {
+
+    int n = this->H_i->size();
+    int m = z.cols();
+
+    //// 1. Ellipsoidal Gating
+    vector<vector<ArrayXi>> gated_index;
+    std::set<int> set_gated_index;
+    this->ellipsoidalGating(gated_index, set_gated_index, z, n);
+
+//    for(int i = 0; i < gated_index.size(); i++) {
+//        std::cout << "i: " << i << std::endl;
+//        for(int j = 0; j < gated_index[i].size(); j++) {
+//            std::cout << "j: " << gated_index[i][j] << ", ";
+//        }
+//        std::cout << std::endl;
+//    }
+    vector<int> all_indices(m);
+    std::generate(all_indices.begin(), all_indices.end(), [n = 0]() mutable { return n++; });
+    set<int> set_all_indices(all_indices.begin(), all_indices.end());
+    std::set<int> set_clutter_indices;
+    std::set_difference(set_all_indices.begin(), set_all_indices.end(),
+                        set_gated_index.begin(), set_gated_index.end(),
+                        std::inserter(set_clutter_indices, set_clutter_indices.end()));
+
+//    for (auto const& index : set_clutter_indices)
+//        std::cout << index << " ";
+//    std::cout << std::endl;
+
+    if(debug == true) {
+        std::cout << "Debug is Here ..." << std::endl;
+    }
+
+    m = set_gated_index.size();
+    // Utils::printf("m: %d", m);
+    MatrixXd new_z = z(Eigen::all, *Utils::setToArrayXi(set_gated_index));
+    // Utils::printEigen<MatrixXd>(new_z, "new_z");
+
+    NestedPtrVecState curr_H_i = make_shared<vector<PtrVecState>>(n);
+    vector<VectorXd> curr_log_w_i(n);
+    this->generate_H_w_i(curr_H_i, curr_log_w_i, new_z, gated_index, set_gated_index, z, m, n);
+
+    vector<vector<int>> vec_H;
+    vector<double> vec_w_logs;
+
+    for(int h = 0; h < this->H->rows(); h++) {
+
+        MatrixXd L = MatrixXd::Constant(n, n+m, std::numeric_limits<double>::infinity());
+        this->generateCostMatrix(L, curr_log_w_i, h, n, m);
+
+        //// 3. Run Murty Algorithm
+        this->runMurty(vec_H, vec_w_logs, L, h, n, m);
+    }
+
+    shared_ptr<MatrixXi> curr_H = make_shared<MatrixXi>();
+    curr_H->resize(vec_H.size(), n);
+
+    for(uint i = 0; i < vec_H.size(); i++) {
+        for(int j = 0; j < n; j++) {
+            (*curr_H)(i, j) = vec_H[i][j];
+        }
+    }
+
+    auto normalizeOutput = Hypothesis().normalizeLogWeights(vec_w_logs);
+    VectorXd w_logs = *std::get<0>(normalizeOutput);
+
+    this->prune(curr_H, w_logs, normalizeOutput, vec_w_logs);
+
 
     for(int i = 0; i < n; i++) {
 
@@ -227,11 +275,8 @@ void MultiTrackerMHT::step(const MatrixXd &z) {
             (*curr_H)(Eigen::all, i) = temporary_H.transpose();
         }
     }
-//    Utils::printEigen<MatrixXi>(*curr_H, "curr_H");
 
-    // MatrixXd::Index best_index;
     std::ignore = w_logs.maxCoeff(&best_index);
-    std::cout << "best_index: " << best_index << std::endl;
 
     this->H = curr_H;
     this->H_i = curr_H_i;
@@ -243,12 +288,7 @@ void MultiTrackerMHT::step(const MatrixXd &z) {
         }
     }
 
-    for(int i = 0; i < n; i++) {
-        int n_i = this->H_i->at(i)->size();
-        for(int lh = 0; lh < n_i; lh++) {
-            this->H_i->at(i)->at(lh) = estimator->predict(*this->H_i->at(i)->at(lh));
-        }
-    }
+    this->predict(n);
 }
 
 

@@ -148,8 +148,7 @@ Item {
 //                }
                 // backend.getMeasurements( xs, ys )
                 // backend.qmlCommand("multi");
-                backend.qmlCommand("jpda");
-                // backend.qmlCommand("gnn");
+                backend.qmlCommand("multi_calc");
             }
         }
         ButtonLabel {

@@ -8,7 +8,7 @@ MultiTrackerJPDA::MultiTrackerJPDA(shared_ptr<Estimator> estimator, PtrVecState 
 }
 
 
-void MultiTrackerJPDA::step(const MatrixXd &z) {
+void MultiTrackerJPDA::step(const MatrixXd &z, bool debug) {
 
     int n = this->states->size();
 
@@ -27,21 +27,20 @@ void MultiTrackerJPDA::step(const MatrixXd &z) {
             set_gated_index.insert(curr_gated_index(k, 0));
     }
 
+    vector<int> vec_gated_index(set_gated_index.begin(), set_gated_index.end());
+    sort(vec_gated_index.begin(), vec_gated_index.end());
+    std::map<int, int> L_indices;
+    for(int i = 0; i < set_gated_index.size(); i++) {
+        L_indices[vec_gated_index[i]] = i;
+    }
     //// 2. Create 'Cost Matrix' (L)
     int m = set_gated_index.size();
     MatrixXd L = MatrixXd::Constant(n, n+m, std::numeric_limits<double>::infinity());
     for(int i = 0; i < n; i++) {
         int gated_size = gated_index[i].size();
-        int L_last_idx = 0;
         for(int k = 0; k < gated_size; k++) {
             int j = gated_index.at(i)[k];
-            int L_idx = j;
-            if(L_idx < m) {
-                L_last_idx = L_idx;
-            } else {
-                L_last_idx += 1;
-                L_idx = L_last_idx;
-            }
+            int L_idx = L_indices[j];
 
             MatrixXd S    = (*estimator->H(states->at(i)->getX())) * states->at(i)->getP() * estimator->H(states->at(i)->getX())->transpose();
             VectorXd zbar = *estimator->h(states->at(i)->getX());

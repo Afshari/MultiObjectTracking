@@ -15,44 +15,31 @@ void MultiTrackerGNN::step(const MatrixXd &z, bool debug) {
     vector<ArrayXi> gated_index;
     std::set<int> set_gated_index;
     for(int i = 0; i < n; i++) {
-        if(debug == true) {
-            Utils::printEigen<VectorXd>(states->at(i)->getX(), "X");
-        }
         auto gatingResult = this->estimator->ellipsoidalGating(*states->at(i), z, gating_size);
         MatrixXd gated_z = *std::get<1>(gatingResult);
 
         ArrayXi curr_gated_index = *std::get<0>(gatingResult);
-//        int curr_gated_size = gated_index.size();
-
+        // std::cout << curr_gated_index << std::endl;
         gated_index.push_back(curr_gated_index);
 
         for(int k = 0; k < curr_gated_index.size(); k++)
             set_gated_index.insert(curr_gated_index(k, 0));
     }
 
-//    std::cout << "gated_index: " << std::endl;
-//    for(ArrayXi arr : gated_index) {
-//        for(int j = 0; j < arr.size(); j++)
-//            std::cout << arr(j) << ", ";
-//        std::cout << std::endl;
-//    }
-//    std::cout << std::endl;
-
+    vector<int> vec_gated_index(set_gated_index.begin(), set_gated_index.end());
+    sort(vec_gated_index.begin(), vec_gated_index.end());
+    std::map<int, int> L_indices;
+    for(int i = 0; i < set_gated_index.size(); i++) {
+        L_indices[vec_gated_index[i]] = i;
+    }
     int m = set_gated_index.size();
 
     MatrixXd L = MatrixXd::Constant(n, n+m, std::numeric_limits<double>::infinity());
     for(int i = 0; i < n; i++) {
         int gated_size = gated_index[i].size();
-        int L_last_idx = 0;
         for(int k = 0; k < gated_size; k++) {
             int j = gated_index.at(i)[k];
-            int L_idx = j;
-            if(L_idx < m) {
-                L_last_idx = L_idx;
-            } else {
-                L_last_idx += 1;
-                L_idx = L_last_idx;
-            }
+            int L_idx = L_indices[j];
 
             MatrixXd S_i_h    = (*estimator->H(states->at(i)->getX())) * states->at(i)->getP() * estimator->H(states->at(i)->getX())->transpose();
             VectorXd zbar_i_h = *estimator->h(states->at(i)->getX());

@@ -11,6 +11,7 @@
 #include <stdarg.h>
 #include <set>
 
+
 #include "inc/state.h"
 
 using Eigen::MatrixXd;
@@ -26,6 +27,7 @@ using std::make_shared;
 using std::string;
 using std::vector;
 using std::set;
+using std::pair;
 
 class Utils : public QObject {
     Q_OBJECT
@@ -61,7 +63,9 @@ public:
     static shared_ptr<VectorXd> getVectorXdData(const QMap<QString, QString>& values, QString field_name, const int LEN);
     static shared_ptr<Vector2d> getVector2dData(const QMap<QString, QString>& values, QString field_name, const int LEN);
     static shared_ptr<MatrixXd> getSquareMatrixXdData(const QMap<QString, QString>& values, QString field_name, const int LEN);
+    static shared_ptr<MatrixXd> getRectangleMatrixXdData(const QMap<QString, QString>& values, QString field_name, const int ROW_LEN, const int COL_LEN);
     static MatrixXd getMeasurementData(const QMap<QString, QString>& values, const string& field_name = "var_meas");
+    static pair<int, int> getLen(const QMap<QString, QString>& values, const string& field_name);
 
 };
 
