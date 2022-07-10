@@ -85,11 +85,13 @@ void TrackerGaussianSum::step(const MatrixXd &z) {
     double max_theta = w_log_update.maxCoeff(&max_index);
     // Utils::printf("max: %d   %f\r\n", max_index, max_theta);
     // Utils::printEigen<VectorXd>(hypotheses_update[max_index]->getX(), "state x");
+    this->updated_x = hypotheses_update[max_index]->getX();
 
     for(auto theta = 0U; theta < hypotheses_update.size(); theta++) {
         hypotheses_update[theta] = this->estimator->predict(*hypotheses_update[theta]);
     }
 
+    this->state = hypotheses_update[max_index];
     this->w_logs = make_shared<VectorXd>(w_log_update);
     this->hypotheses = make_shared<vector<shared_ptr<State>>>(hypotheses_update);
 

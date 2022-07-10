@@ -21,11 +21,13 @@ public:
                      double gating_size, double reduction_M, double w_min = 0, QObject *parent = nullptr);
     virtual void step(const MatrixXd &z) { std::ignore = z; }
     virtual VectorXd getX();
+    virtual VectorXd getUpdatedX();
 
 protected:
     shared_ptr<Estimator> estimator;
     shared_ptr<Sensor>  sensor;
     shared_ptr<State>   state;
+    VectorXd updated_x;
 
 
     double gating_size;

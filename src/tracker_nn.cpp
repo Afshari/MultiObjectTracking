@@ -45,8 +45,9 @@ void TrackerNN::step(const MatrixXd &z) {
             upd_state = this->estimator->update(*this->state, z_NN);
         }
     }
-    Utils::printEigen<VectorXd>(upd_state->getX(), "update state");
-    std::cout << std::endl;
+    this->updated_x = upd_state->getX();
+    // Utils::printEigen<VectorXd>(upd_state->getX(), "update state");
+    // std::cout << std::endl;
 
     pred_state = this->estimator->predict(*upd_state);
     this->state = pred_state;

@@ -15,14 +15,54 @@ DebugRun::DebugRun(const QQmlApplicationEngine &engine, QObject *parent) : QObje
     // engine.rootContext()->setContextProperty("backend", &connectionHandler);
     engine.rootContext()->setContextProperty("backend", this);
 
-    data_path = "sim_c_40_PD_9";
+    data_path = "4_1";
+    // data_path = "sim_c_40_PD_9";
     // data_path = "1_1_c_20_PD_9";
     // data_path = "1_1_c_200_PD_9"; // --> Bug in JPDA
     // data_path = "1_2_c_30_PD_7"; --> Bad Result for GNN & JPDA
-    initTrackers();
+    initSingleTrackers();
+    // initMultiTrackers();
 }
 
-void DebugRun::initTrackers() {
+void DebugRun::initSingleTrackers() {
+
+    QMap<QString, QString> init_values;
+    Utils::getDataFromFile(QString("debug_data/SOT/%1/init.txt").arg(data_path), init_values);
+
+    qDebug() << init_values;
+
+    int K = init_values["K"].toInt();
+    number_of_steps = K;
+    int M = init_values["M"].toInt();
+    float P_D = init_values["P_D"].toFloat();
+    int T = 1;
+    int lambda_c = init_values["lambda_c"].toFloat();
+    float sigma_omega = init_values["sigmaOmega"].toFloat();
+    float sigma_v = init_values["sigmaV"].toFloat();
+    float sigma_b = init_values["sigma_b"].toFloat();
+    float sigma_r = init_values["sigma_r"].toFloat();
+    float w_min = init_values["wmin"].toFloat();
+
+    shared_ptr<VectorXd> init_x = Utils::getVectorXdData(init_values, "initial_state_x", 5);
+    shared_ptr<MatrixXd> init_P = Utils::getSquareMatrixXdData(init_values, "initial_state_P", 5);
+
+    s = Utils::getVector2dData(init_values, "s", 2);
+    range_c = Utils::getSquareMatrixXdData(init_values, "range_c", 2);
+
+
+    shared_ptr<Sensor> sensor = make_shared<Sensor>(P_D, lambda_c, *range_c);
+    shared_ptr<Transition2dTurn> transition_model = make_shared<Transition2dTurn>(T, sigma_v, sigma_omega);
+    shared_ptr<MeasurementRangeBearing> measurement_model = make_shared<MeasurementRangeBearing>(sigma_r, sigma_b, s);
+
+    shared_ptr<State> init_state = make_shared<State>(init_x, init_P);
+
+    shared_ptr<Estimator> estimator = make_shared<Estimator>(measurement_model, transition_model);
+    tracker_nn = make_shared<TrackerNN>(estimator, init_state, sensor, GATING_SIZE, w_min);
+    tracker_pda = make_shared<TrackerPDA>(estimator, init_state, sensor, GATING_SIZE, w_min);
+    tracker_gaussian_sum = make_shared<TrackerGaussianSum>(estimator, init_state, sensor, GATING_SIZE, M, w_min);
+}
+
+void DebugRun::initMultiTrackers() {
 
     QMap<QString, QString> init_values;
     Utils::getDataFromFile(QString("debug_data/MOT/%1/init.txt").arg(data_path), init_values);
@@ -148,19 +188,21 @@ void DebugRun::qmlCommand(QString type) {
 
     if(type_of_tracking == "single") {
 
-        QMap<QString, QString> res_values;
-        Utils::getDataFromFile("debug_data/SOT/sim/res.txt", res_values);
+//        QMap<QString, QString> res_values;
+//        Utils::getDataFromFile("debug_data/SOT/sim/res.txt", res_values);
 
+//        data_counter = 0;
+
+//        float x_mult_offset = 2;
+//        int y_add_offset = 50;
+//        getPoints(res_values, "NN_estimated_state", x_nn, y_nn, 0, y_add_offset, x_mult_offset, 1);
+//        getPoints(res_values, "GS_estimated_state", x_pda, y_pda, 0, y_add_offset, x_mult_offset, 1);
+//        getPoints(res_values, "PDA_estimated_state", x_gs, y_gs, 0, y_add_offset, x_mult_offset, 1);
+//        getPoints(res_values, "true_state", x_ground, y_ground, 0, y_add_offset, x_mult_offset, 1);
+
+        emit setNumberOfBirth(1);
         data_counter = 0;
-
-        float x_mult_offset = 2;
-        int y_add_offset = 50;
-        getPoints(res_values, "NN_estimated_state", x_nn, y_nn, 0, y_add_offset, x_mult_offset, 1);
-        getPoints(res_values, "GS_estimated_state", x_pda, y_pda, 0, y_add_offset, x_mult_offset, 1);
-        getPoints(res_values, "PDA_estimated_state", x_gs, y_gs, 0, y_add_offset, x_mult_offset, 1);
-        getPoints(res_values, "true_state", x_ground, y_ground, 0, y_add_offset, x_mult_offset, 1);
-
-        timerId = startTimer(100);
+        timerId = startTimer(50);
 
     } else if(type_of_tracking == "multi") {
 
@@ -189,14 +231,64 @@ void DebugRun::timerEvent(QTimerEvent *event) {
 
     if(type_of_tracking == "single") {
 
-        emit this->singleTrackingAddItem("nearest_neighbor", x_nn[data_counter], y_nn[data_counter]);
-        emit this->singleTrackingAddItem("gaussian_sum", x_pda[data_counter], y_pda[data_counter]);
-        emit this->singleTrackingAddItem("pda", x_gs[data_counter], y_gs[data_counter]);
-        emit this->singleTrackingAddItem("true_state", x_ground[data_counter], y_ground[data_counter]);
+//        emit this->singleTrackingAddItem("nearest_neighbor", x_nn[data_counter], y_nn[data_counter]);
+//        emit this->singleTrackingAddItem("gaussian_sum", x_pda[data_counter], y_pda[data_counter]);
+//        emit this->singleTrackingAddItem("pda", x_gs[data_counter], y_gs[data_counter]);
+//        emit this->singleTrackingAddItem("true_state", x_ground[data_counter], y_ground[data_counter]);
+
+//        data_counter += 1;
+//        if(data_counter >= x_nn.size())
+//           killTimer(timerId);
 
         data_counter += 1;
-        if(data_counter >= x_nn.size())
-           killTimer(timerId);
+        QList<qreal> x, y, r, theta;
+
+        float x_mult_offset = 0.5;
+        float y_mult_offset = 0.5;
+        int x_add_offset = 1700;
+        int y_add_offset = 1200;
+
+        qDebug() << "i: " << data_counter << "--------------------------";
+        QMap<QString, QString> data_values;
+        Utils::getDataFromFile(QString("debug_data/SOT/%1/%2.txt").arg(data_path, QString::number(data_counter)), data_values);
+
+        MatrixXd z = Utils::getMeasurementData(data_values);
+
+        tracker_nn->step(z);
+        VectorXd state = tracker_nn->getX();
+        x.append(x_mult_offset * (x_add_offset + state(0, 0)));
+        y.append(y_mult_offset * (y_add_offset + state(1, 0)));
+        emit this->multiTrackingAddItem("gnn", x, y);
+
+        x.clear();
+        y.clear();
+        tracker_pda->step(z);
+        state = tracker_pda->getX();
+        x.append(x_mult_offset * (x_add_offset + state(0, 0)));
+        y.append(y_mult_offset * (y_add_offset + state(1, 0)));
+        emit this->multiTrackingAddItem("jpda", x, y);
+
+        x.clear();
+        y.clear();
+        tracker_gaussian_sum->step(z);
+        state = tracker_gaussian_sum->getX();
+        x.append(x_mult_offset * (x_add_offset + state(0, 0)));
+        y.append(y_mult_offset * (y_add_offset + state(1, 0)));
+        emit this->multiTrackingAddItem("mht", x, y);
+
+        getPoints(data_values, "var_x", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
+        emit this->multiTrackingAddItem("ground_truth", x, y);
+
+        x_add_offset += (*s)(0, 0);
+        y_add_offset += (*s)(1, 0);
+        getPoints(data_values, "var_meas", r, theta);
+        polar2Cartesian(r, theta, x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
+        emit this->multiTrackingAddData("", x, y);
+
+        emit this->multiTrackingAddItem("repaint", x, y);
+
+        if(data_counter >= number_of_steps)
+            killTimer(timerId);
 
     } else if(type_of_tracking == "multi") {
 
@@ -227,7 +319,6 @@ void DebugRun::timerEvent(QTimerEvent *event) {
         getPoints(data_values, "var_meas", r, theta);
         polar2Cartesian(r, theta, x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
         emit this->multiTrackingAddData("", x, y);
-
 
         if(data_counter >= number_of_steps)
             killTimer(timerId);
@@ -276,7 +367,7 @@ void DebugRun::timerEvent(QTimerEvent *event) {
         }
         emit this->multiTrackingAddItem("mht", x, y);
 
-        getPoints(data_values, "var_x", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
+        getPoints(data_values, "var_x", x, y) ;//, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
         emit this->multiTrackingAddItem("ground_truth", x, y);
 
         x_add_offset += (*s)(0, 0);
@@ -294,8 +385,10 @@ void DebugRun::timerEvent(QTimerEvent *event) {
 
 void DebugRun::handleEllipsoidalGating() {
 
+    QString path = "2_1_c_200_PD_1";
     QMap<QString, QString> init_values;
-    Utils::getDataFromFile("debug_data/SOT/2_1/init.txt", init_values);
+    Utils::getDataFromFile(QString("debug_data/SOT/%1/init.txt").arg(path), init_values);
+    int K = init_values["K"].toInt();
 
     shared_ptr<TransitionConstantVelocity> transition_model =
              make_shared<TransitionConstantVelocity>(init_values["T"].toInt(), init_values["sigma_q"].toFloat());
@@ -306,38 +399,44 @@ void DebugRun::handleEllipsoidalGating() {
     shared_ptr<MeasurementConstantVelocity> measurement_model =
             make_shared<MeasurementConstantVelocity>(init_values["sigma_r"].toFloat());
 
-    for(int i = 1; i <= 9; i++) {
-
-        qDebug() << i << "-------------------------------";
+    int num_errors = 0;
+    for(int i = 1; i <= (K - 1); i++) {
 
         QMap<QString, QString> data_values;
-        Utils::getDataFromFile(QString("debug_data/SOT/2_1/%1.txt").arg(i), data_values);
+        Utils::getDataFromFile(QString("debug_data/SOT/%1/%2.txt").arg(path, QString::number(i)), data_values);
 
         shared_ptr<VectorXd> x = Utils::getVectorXdData(data_values, "var_x", 4);
         shared_ptr<MatrixXd> P = Utils::getSquareMatrixXdData(data_values, "var_P", 4);
 
         State state(x, P);
-
         Estimator estimator(measurement_model, transition_model);
-
         MatrixXd z = Utils::getMeasurementData(data_values);
 
-        auto result = estimator.ellipsoidalGating(state, z, init_values["gating_size"].toFloat());
-        shared_ptr<ArrayXi> meas_in_gate = std::get<0>(result);
+        State post_state = *estimator.predict(state);
+
+        auto result = estimator.ellipsoidalGating(post_state, z, init_values["gating_size"].toFloat());
+        ArrayXi meas_in_gate = *std::get<0>(result);
         shared_ptr<MatrixXd> z_ingate = std::get<1>(result);
 
-        qDebug() << data_values["indices"];
-        for(int i = 0; i < meas_in_gate->size(); i++)
-            // qDebug() << (*z_ingate)(0, i) << " " << (*z_ingate)(1, i);
-            qDebug() << (*meas_in_gate)(i);
+        QStringList ref_indices = data_values["indices"].split(",");
+        for(int j = 0; j < meas_in_gate.size(); j++) {
+            int diff = (meas_in_gate(j) + 1) - ref_indices[j].toInt();
+            if(diff != 0) {
+                num_errors += 1;
+                std::cout << "i: " << i << " --> " << (meas_in_gate(j) + 1) << " <> " << ref_indices[j].toStdString() << std::endl;
+            }
+        }
     }
+    std::cout << "Ellipsoidal Gating --> Number of Errors: " << num_errors << std::endl;
 }
 
 void DebugRun::handlePredictedLikelihood() {
 
+    QString path = "2_2_c_100_PD_1";
     QMap<QString, QString> init_values;
-    Utils::getDataFromFile("debug_data/SOT/2_2/init.txt", init_values);
+    Utils::getDataFromFile(QString("debug_data/SOT/%1/init.txt").arg(path), init_values);
 
+    int K = init_values["K"].toInt();
     shared_ptr<TransitionConstantVelocity> transition_model =
              make_shared<TransitionConstantVelocity>(init_values["T"].toInt(), init_values["sigma_q"].toFloat());
 
@@ -347,12 +446,11 @@ void DebugRun::handlePredictedLikelihood() {
     shared_ptr<MeasurementConstantVelocity> measurement_model =
             make_shared<MeasurementConstantVelocity>(init_values["sigma_r"].toFloat());
 
-    for(int i = 1; i <= 9; i++) {
-
-        qDebug() << i << "-------------------------------";
+    int num_errors = 0;
+    for(int i = 1; i <= K; i++) {
 
         QMap<QString, QString> data_values;
-        Utils::getDataFromFile(QString("debug_data/SOT/2_2/%1.txt").arg(i), data_values);
+        Utils::getDataFromFile(QString("debug_data/SOT/%1/%2.txt").arg(path, QString::number(i)), data_values);
 
         shared_ptr<VectorXd> x = Utils::getVectorXdData(data_values, "var_x", 4);
         shared_ptr<MatrixXd> P = Utils::getSquareMatrixXdData(data_values, "var_P", 4);
@@ -366,22 +464,29 @@ void DebugRun::handlePredictedLikelihood() {
 
         shared_ptr<VectorXd> predicted_likelihood = estimator.predictedLikelihood(state, z);
 
-        qDebug() << data_values["predict_likelihood"];
-        for(int i = 0; i < predicted_likelihood->size(); i++)
-            qDebug() << predicted_likelihood->coeff(i, 0);
+        QStringList ref_values = data_values["predict_likelihood"].split(",");
+        for(int j = 0; j < predicted_likelihood->size(); j++) {
+            double ref_value = ref_values[j].toDouble();
+            double res = predicted_likelihood->coeff(j, 0);
+            if(abs(res - ref_value) > 1e-4) {
+                num_errors += 1;
+                std::cout << "i: " << i << " --> " << ref_value << " <> " << res << std::endl;
+            }
+        }
     }
+    std::cout << "Predicted Likelihood --> Number of Errors: " << num_errors << std::endl;
 }
 
 void DebugRun::handleMomentMatching() {
 
+    QString path = "2_3";
     QMap<QString, QString> init_values;
-    Utils::getDataFromFile("debug_data/SOT/2_3/init.txt", init_values);
+    Utils::getDataFromFile(QString("debug_data/SOT/%1/init.txt").arg(path), init_values);
 
     int num_gaussians = init_values["numGaussians"].toInt();
-    int num_dims = init_values["nDim"].toInt();
 
     QMap<QString, QString> res_values;
-    Utils::getDataFromFile("debug_data/SOT/2_3/res.txt", res_values);
+    Utils::getDataFromFile(QString("debug_data/SOT/%1/res.txt").arg(path), res_values);
 
     shared_ptr<VectorXd> w = Utils::getVectorXdData(res_values, "w", num_gaussians);
 
@@ -389,7 +494,7 @@ void DebugRun::handleMomentMatching() {
     for(int i = 1; i <= num_gaussians; i++) {
 
         QMap<QString, QString> data_values;
-        Utils::getDataFromFile(QString("debug_data/SOT/2_3/%1.txt").arg(i), data_values);
+        Utils::getDataFromFile(QString("debug_data/SOT/%1/%2.txt").arg(path, QString::number(i)), data_values);
 
         shared_ptr<VectorXd> x = Utils::getVectorXdData(data_values, "var_x", 4);
         shared_ptr<MatrixXd> P = Utils::getSquareMatrixXdData(data_values, "var_P", 4);
@@ -400,16 +505,25 @@ void DebugRun::handleMomentMatching() {
     Estimator estimator;
     State state = estimator.momentMatching(*w, make_shared<vector<State>>(states));
 
-    std::cout << state.getX() << std::endl << std::endl;
-    std::cout << state.getP() << std::endl << std::endl;
-    std::cout << res_values["var_x"].toStdString() << std::endl << std::endl;
-    std::cout << res_values["var_P"].toStdString() << std::endl << std::endl;
+    VectorXd x = *Utils::getVectorXdData(res_values, "var_x", 4);
+    MatrixXd P = *Utils::getSquareMatrixXdData(res_values, "var_P", 4);
+
+    // std::cout << state.getX() << std::endl << std::endl;
+    // std::cout << x << std::endl << std::endl;
+
+    // std::cout << state.getP() << std::endl << std::endl;
+    // std::cout << P << std::endl << std::endl;
+
+    std::cout << "Moment Matching: " << std::endl;
+    std::cout << "x norm: " << state.getX().norm() << ", " << x.norm() << std::endl;
+    std::cout << "P norm: " << state.getP().norm() << ", " << P.norm() << std::endl;
 }
 
 void DebugRun::handlePrune() {
 
+    QString path = "3_1";
     QMap<QString, QString> values;
-    Utils::getDataFromFile("debug_data/SOT/3_1/values.txt", values);
+    Utils::getDataFromFile(QString("debug_data/SOT/%1/values.txt").arg(path), values);
 
     float threshold = values["threshold"].toFloat();
     vector<int> states(100, 0);
@@ -423,16 +537,23 @@ void DebugRun::handlePrune() {
 
     std::sort(std::begin(*res_weights), std::end(*res_weights));
 
-    std::cout << values["hypothesesWeight_hat"].toStdString() << std::endl << std::endl;
-    std::cout << res_weights->rows() << std::endl << std::endl;
-    std::cout << (*res_weights) << std::endl;
-
+    int num_errors = 0;
+    QStringList ref_weights = values["hypothesesWeight_hat"].split(",");
+    for(int i = 0; i < res_weights->rows(); i++) {
+        double diff = abs( (*res_weights)(i, 0) -  ref_weights.at(i).toDouble());
+        if(diff > 1e-4) {
+            num_errors += 1;
+            std::cout << diff << std::endl;
+        }
+    }
+    std::cout << "Prune --> Number of Errors: " << num_errors << std::endl;
 }
 
 void DebugRun::handleCap() {
 
+    QString path = "3_2";
     QMap<QString, QString> values;
-    Utils::getDataFromFile("debug_data/SOT/3_2/values.txt", values);
+    Utils::getDataFromFile(QString("debug_data/SOT/%1/values.txt").arg(path), values);
 
     float threshold = values["threshold"].toFloat();
     vector<int> states(100, 0);
@@ -446,26 +567,28 @@ void DebugRun::handleCap() {
 
     std::sort(std::begin(*res_weights), std::end(*res_weights));
 
-    std::cout << values["hypothesesWeight_hat"].toStdString() << std::endl << std::endl;
-    std::cout << res_weights->rows() << std::endl << std::endl;
-    std::cout << (*res_weights) << std::endl;
+    int num_errors = 0;
+    QStringList ref_weights = values["hypothesesWeight_hat"].split(",");
+    for(int i = 0; i < res_weights->rows(); i++) {
+        double diff = abs( (*res_weights)(i, 0) -  ref_weights.at(i).toDouble());
+        if(diff > 1e-4) {
+            num_errors += 1;
+            std::cout << diff << std::endl;
+        }
+    }
+    std::cout << "Cap --> Number of Errors: " << num_errors << std::endl;
 }
 
 void DebugRun::handleNearestNeighbor() {
 
+    QString path = "4_1";
     QMap<QString, QString> init_values;
-    Utils::getDataFromFile("debug_data/SOT/4_1/init.txt", init_values);
-
-    qDebug() << init_values;
+    Utils::getDataFromFile(QString("debug_data/SOT/%1/init.txt").arg(path), init_values);
 
     int K = init_values["K"].toInt();
-    int M = init_values["M"].toInt();
     float P_D = init_values["P_D"].toFloat();
-    float P_G = init_values["P_G"].toFloat();
     int T = 1;
     int lambda_c = init_values["lambda_c"].toFloat();
-    int mergeing_threshold = init_values["merging_threshold"].toInt();
-    int nbirths = init_values["nbirths"].toInt();
     float sigma_omega = init_values["sigmaOmega"].toFloat();
     float sigma_v = init_values["sigmaV"].toFloat();
     float sigma_b = init_values["sigma_b"].toFloat();
@@ -478,10 +601,6 @@ void DebugRun::handleNearestNeighbor() {
     shared_ptr<Vector2d> s = Utils::getVector2dData(init_values, "s", 2);
     shared_ptr<MatrixXd> range_c = Utils::getSquareMatrixXdData(init_values, "range_c", 2);
 
-//    std::cout << *init_x << std::endl << std::endl;
-//    std::cout << *init_P << std::endl << std::endl;
-//    std::cout << *s << std::endl << std::endl;
-//    std::cout << *range_c << std::endl << std::endl;
 
     shared_ptr<Sensor> sensor = make_shared<Sensor>(P_D, lambda_c, *range_c);
     shared_ptr<Transition2dTurn> transition_model = make_shared<Transition2dTurn>(T, sigma_v, sigma_omega);
@@ -490,35 +609,41 @@ void DebugRun::handleNearestNeighbor() {
     shared_ptr<State> init_state = make_shared<State>(init_x, init_P);
 
     shared_ptr<Estimator> estimator = make_shared<Estimator>(measurement_model, transition_model);
-    TrackerNN tracker(estimator, init_state, sensor, 13.8155, w_min);
+    TrackerNN tracker(estimator, init_state, sensor, GATING_SIZE, w_min);
 
-    for(int i = 1; i <= 50; i++) {
+    int num_errors = 0;
+    for(int i = 1; i <= K; i++) {
 
         QMap<QString, QString> data_values;
-        Utils::getDataFromFile(QString("debug_data/SOT/4_1/%1.txt").arg(i), data_values);
+        Utils::getDataFromFile(QString("debug_data/SOT/%1/%2.txt").arg(path, QString::number(i)), data_values);
 
-        std::cout << i << std::endl;
         MatrixXd z = Utils::getMeasurementData(data_values);
+        VectorXd ref_x = *Utils::getVectorXdData(data_values, "var_full_x", 5);
         tracker.step(z);
-        // std::cout << tracker.getX() << std::endl << std::endl;
+        double diff = abs(ref_x.norm() - tracker.getUpdatedX().norm());
+
+        if(diff > 1e-4) {
+
+            num_errors += 1;
+            std::cout << "i: " << i << std::endl;
+            std::cout << "result: " << tracker.getUpdatedX() << std::endl;
+            std::cout << "ref: " << ref_x << std::endl;
+            std::cout << "--------------------------------" << std::endl;
+        }
     }
+    std::cout << "Nearest Neighbor --> Number of Errors: " << num_errors << std::endl;
 }
 
 void DebugRun::handlePDA() {
 
+    QString path = "4_2";
     QMap<QString, QString> init_values;
-    Utils::getDataFromFile("debug_data/SOT/4_2/init.txt", init_values);
-
-    qDebug() << init_values;
+    Utils::getDataFromFile(QString("debug_data/SOT/%1/init.txt").arg(path), init_values);
 
     int K = init_values["K"].toInt();
-    int M = init_values["M"].toInt();
     float P_D = init_values["P_D"].toFloat();
-    float P_G = init_values["P_G"].toFloat();
     int T = 1;
     int lambda_c = init_values["lambda_c"].toFloat();
-    int mergeing_threshold = init_values["merging_threshold"].toInt();
-    int nbirths = init_values["nbirths"].toInt();
     float sigma_omega = init_values["sigmaOmega"].toFloat();
     float sigma_v = init_values["sigmaV"].toFloat();
     float sigma_b = init_values["sigma_b"].toFloat();
@@ -538,34 +663,44 @@ void DebugRun::handlePDA() {
     shared_ptr<State> init_state = make_shared<State>(init_x, init_P);
 
     shared_ptr<Estimator> estimator = make_shared<Estimator>(measurement_model, transition_model);
-    TrackerPDA tracker(estimator, init_state, sensor, 13.8155, w_min);
+    TrackerPDA tracker(estimator, init_state, sensor, GATING_SIZE, w_min);
 
-    for(int i = 1; i <= 50; i++) {
+    int num_errors = 0;
+    for(int i = 1; i <= K; i++) {
 
         QMap<QString, QString> data_values;
-        Utils::getDataFromFile(QString("debug_data/SOT/4_2/%1.txt").arg(i), data_values);
+        Utils::getDataFromFile(QString("debug_data/SOT/%1/%2.txt").arg(path, QString::number(i)), data_values);
 
-        std::cout << i << std::endl;
         MatrixXd z = Utils::getMeasurementData(data_values);
+        VectorXd ref_x = *Utils::getVectorXdData(data_values, "var_full_x", 5);
         tracker.step(z);
+
+        double diff = abs(ref_x.norm() - tracker.getUpdatedX().norm());
+
+        if(diff > 1e-4) {
+
+            num_errors += 1;
+            std::cout << "i: " << i << std::endl;
+            std::cout << "result: " << tracker.getUpdatedX() << std::endl;
+            std::cout << "ref: " << ref_x << std::endl;
+            std::cout << "diff: " << (tracker.getUpdatedX() - ref_x) << std::endl;
+            std::cout << "--------------------------------" << std::endl;
+        }
     }
+    std::cout << "PDA --> Number of Errors: " << num_errors << std::endl;
 }
 
 void DebugRun::handleGaussianSum() {
 
+    QString path = "4_3";
     QMap<QString, QString> init_values;
-    Utils::getDataFromFile("debug_data/SOT/4_3/init.txt", init_values);
-
-    qDebug() << init_values;
+    Utils::getDataFromFile(QString("debug_data/SOT/%1/init.txt").arg(path), init_values);
 
     int K = init_values["K"].toInt();
     int M = init_values["M"].toInt();
     float P_D = init_values["P_D"].toFloat();
-    float P_G = init_values["P_G"].toFloat();
-    int T = init_values["T"].toInt(); // 1;
+    int T = init_values["T"].toInt();
     int lambda_c = init_values["lambda_c"].toFloat();
-    int mergeing_threshold = init_values["merging_threshold"].toInt();
-    int nbirths = init_values["nbirths"].toInt();
     float sigma_omega = init_values["sigmaOmega"].toFloat();
     float sigma_v = init_values["sigmaV"].toFloat();
     float sigma_b = init_values["sigma_b"].toFloat();
@@ -585,18 +720,30 @@ void DebugRun::handleGaussianSum() {
     shared_ptr<State> init_state = make_shared<State>(init_x, init_P);
 
     shared_ptr<Estimator> estimator = make_shared<Estimator>(measurement_model, transition_model);
-    // TrackerNN tracker(estimator, init_state, sensor, 13.8155, w_min);
-    TrackerGaussianSum tracker(estimator, init_state, sensor, 13.8155, M, w_min);
+    TrackerGaussianSum tracker(estimator, init_state, sensor, GATING_SIZE, M, w_min);
 
-    for(int i = 1; i <= 50; i++) {
+    int num_errors = 0;
+    for(int i = 1; i <= K; i++) {
 
         QMap<QString, QString> data_values;
-        Utils::getDataFromFile(QString("debug_data/SOT/4_3/%1.txt").arg(i), data_values);
+        Utils::getDataFromFile(QString("debug_data/SOT/%1/%2.txt").arg(path, QString::number(i)), data_values);
 
-        std::cout << "i: " << i << std::endl;
         MatrixXd z = Utils::getMeasurementData(data_values);
+        VectorXd ref_x = *Utils::getVectorXdData(data_values, "var_full_x", 5);
         tracker.step(z);
+
+        double diff = abs(ref_x.norm() - tracker.getUpdatedX().norm());
+        if(diff > 1e-4) {
+
+            num_errors += 1;
+            std::cout << "i: " << i << std::endl;
+            std::cout << "result: " << tracker.getUpdatedX() << std::endl;
+            std::cout << "ref: " << ref_x << std::endl;
+            std::cout << "diff: " << (tracker.getUpdatedX() - ref_x) << std::endl;
+            std::cout << "--------------------------------" << std::endl;
+        }
     }
+    std::cout << "Gaussian Sum --> Number of Errors: " << num_errors << std::endl;
 }
 
 void DebugRun::handleGNN() {

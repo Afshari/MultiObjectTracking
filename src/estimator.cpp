@@ -17,7 +17,7 @@ Estimator::Estimator(shared_ptr<MeasurementModel> measurementModel, shared_ptr<T
 
 tuple<shared_ptr<ArrayXi>, shared_ptr<MatrixXd>> Estimator::ellipsoidalGating(
                                 const State &state,
-                                const MatrixXd &z, float gating_size) {
+                                const MatrixXd &z, double gating_size) {
 
     // Hx = H( x )
     MatrixXd Hx = *this->measurementModel->H( state.getX() );
@@ -27,18 +27,18 @@ tuple<shared_ptr<ArrayXi>, shared_ptr<MatrixXd>> Estimator::ellipsoidalGating(
     S = (S + S.transpose()) / 2;
 
     // zk = h( x )
-    VectorXd zk = *this->measurementModel->h( state.getX() );       //  --> Use in Multi Object !!!
-    // VectorXd zk = Hx * state.getX();         // --> Use in Single Object !!!
+    VectorXd zk = *this->measurementModel->h( state.getX() );
 
+    // d = (zk - z)
     MatrixXd d = z - zk.replicate(1, z.cols());
-    // dm = (zk - z).T @ inv(S) @ (zk - z)
+
+    // dm = d.T @ inv(S) @ d
     VectorXd dm(z.cols());
     for(auto i = 0U; i < z.cols(); i++) {
         dm(i) = d(Eigen::all, i).transpose() * S.inverse() * d(Eigen::all, i);
     }
 
     MatrixXd z_gate = (dm.array() < gating_size).cast<double>().matrix();
-    // Utils::print(z_in_gate, "z_in_gate");
 
     int len = (z_gate.array() > 0).colwise().count()[0];
     ArrayXi idx_in_gate(len);
@@ -52,7 +52,6 @@ tuple<shared_ptr<ArrayXi>, shared_ptr<MatrixXd>> Estimator::ellipsoidalGating(
 
     shared_ptr<ArrayXi>  result_idx = make_shared<ArrayXi>( idx_in_gate );
     shared_ptr<MatrixXd> result_z = make_shared<MatrixXd>( z(Eigen::all, idx_in_gate) );
-    // Utils::print(*result_z, "result_z");
 
     tuple<shared_ptr<ArrayXi>, shared_ptr<MatrixXd>> result(result_idx, result_z);
 

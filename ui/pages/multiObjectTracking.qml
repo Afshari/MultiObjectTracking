@@ -147,8 +147,9 @@ Item {
 //                    ys.push( trackingParams.measurements[i][1] )
 //                }
                 // backend.getMeasurements( xs, ys )
-                // backend.qmlCommand("multi");
-                backend.qmlCommand("multi_calc");
+//                 backend.qmlCommand("multi");
+//                 backend.qmlCommand("multi_calc");
+                backend.qmlCommand("single");
             }
         }
         ButtonLabel {

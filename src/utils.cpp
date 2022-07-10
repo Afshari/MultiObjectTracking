@@ -223,6 +223,7 @@ shared_ptr<MatrixXd> Utils::getRectangleMatrixXdData(const QMap<QString, QString
     return res;
 }
 
+
 MatrixXd Utils::getMeasurementData(const QMap<QString, QString>& values, const string& field_name) {
 
     QStringList lst_meas = values[QString::fromStdString(field_name)].split(",");

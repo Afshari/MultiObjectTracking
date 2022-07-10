@@ -1,5 +1,5 @@
-#ifndef TRACKER_NN_H
-#define TRACKER_NN_H
+#ifndef _TRACKER_NN_H_
+#define _TRACKER_NN_H_
 
 #include <QObject>
 #include <Eigen/Dense>
@@ -22,7 +22,6 @@ public:
     virtual void step(const MatrixXd &z);
 
 
-
 };
 
-#endif // TRACKER_NN_H
+#endif // _TRACKER_NN_H_

@@ -60,11 +60,16 @@ protected:
     shared_ptr<MeasurementRangeBearing> measurement_model;
     shared_ptr<Estimator> estimator;
 
+    shared_ptr<TrackerNN> tracker_nn;
+    shared_ptr<TrackerPDA> tracker_pda;
+    shared_ptr<TrackerGaussianSum> tracker_gaussian_sum;
+
     shared_ptr<MultiTrackerGNN> tracker_gnn;
     shared_ptr<MultiTrackerJPDA> tracker_jpda;
     shared_ptr<MultiTrackerMHT> tracker_mht;
 
-    void initTrackers();
+    void initSingleTrackers();
+    void initMultiTrackers();
 
 
     QList<qreal> x_nn,  y_nn;

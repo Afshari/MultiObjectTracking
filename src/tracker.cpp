@@ -14,3 +14,8 @@ Tracker::Tracker(shared_ptr<Estimator> estimator, shared_ptr<State> initial_stat
 VectorXd Tracker::getX() {
     return this->state->getX();
 }
+
+VectorXd Tracker::getUpdatedX() {
+
+    return this->updated_x;
+}
