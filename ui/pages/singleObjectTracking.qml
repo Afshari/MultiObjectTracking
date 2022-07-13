@@ -12,9 +12,17 @@ Item {
         property variant line:                      []
         property variant clutters:                  []
         property variant measurements:              []
+        property variant all_measure:               []
         property variant nearest_neighbor:          []
         property variant pda:                       []
         property variant gaussian_sum:              []
+        property bool show_nearest_neighbor:        true
+        property bool show_pda:                     true
+        property bool show_gaussian_sum:            true
+        property bool show_measurement:             true
+        property bool show_all_meas:                true
+        property bool show_truth:                   true
+
     }
 
     function drawPoints(ctx, items, color) {
@@ -29,6 +37,15 @@ Item {
             ctx.arc(x, y, 5, 0, Math.PI * 2, false);
             ctx.stroke();
         }
+    }
+
+    function drawLegends(ctx, text_start_y, color, txt, TEXT_START_X, text_start_y, SYM_START_X) {
+
+        ctx.beginPath();
+        ctx.fillStyle = color;
+        ctx.fillText(txt, TEXT_START_X, text_start_y);
+        ctx.arc(SYM_START_X, text_start_y - 5, 5, 0, Math.PI * 2, false);
+        ctx.fill()
     }
 
     QtObject {
@@ -49,10 +66,11 @@ Item {
             top: parent.top
             topMargin: 8
         }
-        property color paintColor:          "#33B5E5"
+        property color truth:               "#33B5E5"
         property color nearest_neighbor:    "#FF0000"
         property color pda:                 "#00FF00"
         property color gaussian_sum:        "#0000FF"
+        property color measurement:         "white"
 
         ButtonLabel {
             id: btnClear
@@ -123,7 +141,102 @@ Item {
                 backend.qmlCommand("single");
             }
         }
+        CustomSwitch {
+            height: parent.height - 5
+            checked: true
 
+            Label {
+                text: "NN"
+                color: "white"
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                anchors.bottom: parent.bottom
+            }
+            onCheckedChanged: {
+                trackingParams.show_nearest_neighbor = checked
+                canvas.requestPaint()
+            }
+        }
+        CustomSwitch {
+            height: parent.height - 5
+            checked: true
+
+            Label {
+                text: "PDA"
+                color: "white"
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                anchors.bottom: parent.bottom
+            }
+            onCheckedChanged: {
+                trackingParams.show_pda = checked
+                canvas.requestPaint()
+            }
+        }
+        CustomSwitch {
+            height: parent.height - 5
+            checked: true
+
+            Label {
+                text: "GS"
+                color: "white"
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                anchors.bottom: parent.bottom
+            }
+            onCheckedChanged: {
+                trackingParams.show_gaussian_sum = checked
+                canvas.requestPaint()
+            }
+        }
+        CustomSwitch {
+            height: parent.height - 5
+            checked: true
+
+            Label {
+                text: "Measure"
+                color: "white"
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                anchors.bottom: parent.bottom
+            }
+            onCheckedChanged: {
+                trackingParams.show_measurement = checked
+                canvas.requestPaint()
+            }
+        }
+        CustomSwitch {
+            height: parent.height - 5
+            checked: true
+
+            Label {
+                text: "All Meas"
+                color: "white"
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                anchors.bottom: parent.bottom
+            }
+            onCheckedChanged: {
+                trackingParams.show_all_meas = checked
+                canvas.requestPaint()
+            }
+        }
+        CustomSwitch {
+            height: parent.height - 5
+            checked: true
+
+            Label {
+                text: "Truth"
+                color: "white"
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                anchors.bottom: parent.bottom
+            }
+            onCheckedChanged: {
+                trackingParams.show_truth = checked
+                canvas.requestPaint()
+            }
+        }
 
     }
 
@@ -138,7 +251,7 @@ Item {
         }
         property real lastX
         property real lastY
-        property color color: colorTools.paintColor
+        property color color: colorTools.truth
 
         onPaint: {
             // console.log("onPaint")
@@ -149,42 +262,71 @@ Item {
 
             var x = 0
             var y = 0
-            for(var i = 0; i < trackingParams.line.length - 1; i++) {
-                ctx.lineWidth = 3
-                ctx.strokeStyle = canvas.color
-                ctx.beginPath()
-                x = trackingParams.line[i][0]
-                y = trackingParams.line[i][1]
-                ctx.moveTo(x, y)
-                x = trackingParams.line[i + 1][0]
-                y = trackingParams.line[i + 1][1]
-                ctx.lineTo(x, y)
-                ctx.stroke()
+
+            if(trackingParams.show_truth == true) {
+                for(var i = 0; i < trackingParams.line.length - 1; i++) {
+                    ctx.lineWidth = 3
+                    ctx.strokeStyle = canvas.color
+                    ctx.beginPath()
+                    x = trackingParams.line[i][0]
+                    y = trackingParams.line[i][1]
+                    ctx.moveTo(x, y)
+                    x = trackingParams.line[i + 1][0]
+                    y = trackingParams.line[i + 1][1]
+                    ctx.lineTo(x, y)
+                    ctx.stroke()
+                }
             }
 
-            drawPoints(ctx, trackingParams.nearest_neighbor, colorTools.nearest_neighbor)
-            drawPoints(ctx, trackingParams.pda, colorTools.pda)
-            drawPoints(ctx, trackingParams.gaussian_sum, colorTools.gaussian_sum)
+            if(trackingParams.show_nearest_neighbor == true)    drawPoints(ctx, trackingParams.nearest_neighbor, colorTools.nearest_neighbor)
+            if(trackingParams.show_pda == true)                 drawPoints(ctx, trackingParams.pda, colorTools.pda)
+            if(trackingParams.show_gaussian_sum == true)        drawPoints(ctx, trackingParams.gaussian_sum, colorTools.gaussian_sum)
 
 
-            for(i = 0; i < trackingParams.clutters.length; i++) {
-                ctx.beginPath();
-                ctx.fillStyle = "white"
-                x = trackingParams.clutters[i][0]
-                y = trackingParams.clutters[i][1]
-                ctx.arc(x, y, 3, 0, Math.PI * 2, false);
-                ctx.fill();
+            if(trackingParams.show_measurement == true) {
+
+                if(trackingParams.show_all_meas == true) {
+                    for(i = 0; i < trackingParams.all_measure.length; i++) {
+                        ctx.beginPath();
+                        ctx.fillStyle = colorTools.measurement
+                        x = trackingParams.all_measure[i][0]
+                        y = trackingParams.all_measure[i][1]
+                        ctx.arc(x, y, 3, 0, Math.PI * 2, false);
+                        ctx.fill();
+                    }
+                } else {
+                    for(i = 0; i < trackingParams.measurements.length; i++) {
+                        ctx.beginPath();
+                        ctx.fillStyle = colorTools.measurement
+                        x = trackingParams.measurements[i][0]
+                        y = trackingParams.measurements[i][1]
+                        ctx.arc(x, y, 3, 0, Math.PI * 2, false);
+                        ctx.fill();
+                    }
+                }
             }
 
-            for(i = 0; i < trackingParams.measurements.length; i++) {
-                ctx.beginPath();
-                ctx.fillStyle = "white"
-                x = trackingParams.measurements[i][0]
-                y = trackingParams.measurements[i][1]
-                ctx.arc(x, y, 3, 0, Math.PI * 2, false);
-                ctx.fill();
-            }
+            ctx.beginPath();
+            ctx.fillStyle = ctx.fillStyle = Qt.rgba(0.3, 0.3, 0.3, 1);
+            ctx.rect(parent.width - 180, 20, 150, 170);
+            ctx.fill();
 
+            const TEXT_START_X = parent.width - 170;
+            const SYM_START_X  = parent.width - 50;
+            var text_start_y = 20;
+            ctx.font = '16px Verdana'
+
+
+            text_start_y += 30;
+            drawLegends(ctx, text_start_y, colorTools.truth, "Truth", TEXT_START_X, text_start_y, SYM_START_X);
+            text_start_y += 30;
+            drawLegends(ctx, text_start_y, colorTools.measurement, "Measure", TEXT_START_X, text_start_y, SYM_START_X);
+            text_start_y += 30;
+            drawLegends(ctx, text_start_y, colorTools.nearest_neighbor, "NN", TEXT_START_X, text_start_y, SYM_START_X);
+            text_start_y += 30;
+            drawLegends(ctx, text_start_y, colorTools.pda, "PDA", TEXT_START_X, text_start_y, SYM_START_X);
+            text_start_y += 30;
+            drawLegends(ctx, text_start_y, colorTools.gaussian_sum, "GS", TEXT_START_X, text_start_y, SYM_START_X);
 
         }
 
@@ -229,6 +371,14 @@ Item {
 
         target: backend
 
+        onResetData: {
+            trackingParams.nearest_neighbor = []
+            trackingParams.pda              = []
+            trackingParams.gaussian_sum     = []
+            trackingParams.line             = []
+            trackingParams.all_measure      = []
+        }
+
         onSingleTrackingAddItem: {
             if(typeOfItem.valueOf() === "nearest_neighbor") {
                 trackingParams.nearest_neighbor.push( [ parseInt(x), parseInt(y) ] )
@@ -236,34 +386,18 @@ Item {
                 trackingParams.pda.push( [ parseInt(x), parseInt(y) ] )
             } else if(typeOfItem.valueOf() === "gaussian_sum") {
                 trackingParams.gaussian_sum.push( [ parseInt(x), parseInt(y) ] )
-            } else if(typeOfItem.valueOf() === "true_state") {
+            } else if(typeOfItem.valueOf() === "ground_truth") {
                 trackingParams.line.push( [ parseInt(x), parseInt(y) ] )
+            } else if(typeOfItem.valueOf() === "repaint") {
+                canvas.requestPaint()
             }
-            canvas.requestPaint()
         }
 
         onSingleTrackingAddData: {
-            if(typeOfDraw.valueOf() === "nearest_neighbor") {
-                trackingParams.nearest_neighbor = []
-                for(var i = 0; i < x.length; i++) {
-                    trackingParams.nearest_neighbor.push( [ parseInt(x[i]), parseInt(y[i]) ] )
-                }
-            } else if(typeOfDraw.valueOf() === "pda") {
-                trackingParams.pda = []
-                for(i = 0; i < x.length; i++) {
-                    trackingParams.pda.push( [ parseInt(x[i]), parseInt(y[i]) ] )
-                }
-            } else if(typeOfDraw.valueOf() === "gaussian_sum") {
-                trackingParams.gaussian_sum = []
-                for(i = 0; i < x.length; i++) {
-                    trackingParams.gaussian_sum.push( [ parseInt(x[i]), parseInt(y[i]) ] )
-                }
-            }
-            else if(typeOfDraw.valueOf() === "true_state") {
-                trackingParams.line = []
-                for(i = 0; i < x.length; i++) {
-                    trackingParams.line.push( [ parseInt(x[i]), parseInt(y[i]) ] )
-                }
+            trackingParams.measurements = []
+            for(var i = 0; i < x.length; i++) {
+                trackingParams.measurements.push( [ parseInt(x[i]), parseInt(y[i]) ] )
+                trackingParams.all_measure.push( [ parseInt(x[i]), parseInt(y[i]) ] )
             }
             canvas.requestPaint()
         }

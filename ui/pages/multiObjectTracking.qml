@@ -15,15 +15,17 @@ Item {
         property variant curr_line:             []
         property variant clutters:              []
         property variant measurements:          []
+        property variant all_measures:          []
         property variant gnn:                   Array(4)
         property variant jpda:                  Array(4)
         property variant mht:                   Array(4)
         property int number_of_birth:           0
-        property bool showGNN:                  true
-        property bool showJPDA:                 true
-        property bool showMHT:                  true
-        property bool showMeasurement:          true
-        property bool showTruth:                true
+        property bool show_gnn:                 true
+        property bool show_jpda:                true
+        property bool show_mht:                 true
+        property bool show_measurement:         true
+        property bool show_all_meas:            true
+        property bool show_truth:               true
     }
 
     function drawPoints(ctx, items, color) {
@@ -147,9 +149,8 @@ Item {
 //                    ys.push( trackingParams.measurements[i][1] )
 //                }
                 // backend.getMeasurements( xs, ys )
-//                 backend.qmlCommand("multi");
-//                 backend.qmlCommand("multi_calc");
-                backend.qmlCommand("single");
+                 backend.qmlCommand("multi");
+//                backend.qmlCommand("single");
             }
         }
         ButtonLabel {
@@ -174,7 +175,7 @@ Item {
                 anchors.bottom: parent.bottom
             }
             onCheckedChanged: {
-                trackingParams.showGNN = checked
+                trackingParams.show_gnn = checked
                 canvas.requestPaint()
             }
         }
@@ -190,7 +191,7 @@ Item {
                 anchors.bottom: parent.bottom
             }
             onCheckedChanged: {
-                trackingParams.showJPDA = checked
+                trackingParams.show_jpda = checked
                 canvas.requestPaint()
             }
         }
@@ -206,7 +207,7 @@ Item {
                 anchors.bottom: parent.bottom
             }
             onCheckedChanged: {
-                trackingParams.showMHT = checked
+                trackingParams.show_mht = checked
                 canvas.requestPaint()
             }
         }
@@ -222,7 +223,23 @@ Item {
                 anchors.bottom: parent.bottom
             }
             onCheckedChanged: {
-                trackingParams.showMeasurement = checked
+                trackingParams.show_measurement = checked
+                canvas.requestPaint()
+            }
+        }
+        CustomSwitch {
+            height: parent.height - 5
+            checked: true
+
+            Label {
+                text: "All Meas"
+                color: "white"
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                anchors.bottom: parent.bottom
+            }
+            onCheckedChanged: {
+                trackingParams.show_all_meas = checked
                 canvas.requestPaint()
             }
         }
@@ -238,14 +255,10 @@ Item {
                 anchors.bottom: parent.bottom
             }
             onCheckedChanged: {
-                trackingParams.showTruth = checked
+                trackingParams.show_truth = checked
                 canvas.requestPaint()
             }
         }
-
-
-
-
     }
 
     Canvas {
@@ -268,9 +281,10 @@ Item {
             ctx.fillStyle = Qt.rgba(0.5, 0.5, 0.5, 1);
             ctx.fillRect(0, 0, width, height);
 
-            var x = 0
-            var y = 0
-            for(var i = 0; i < trackingParams.curr_line.length - 1; i++) {
+            var i, j;
+            var x = 0;
+            var y = 0;
+            for(i = 0; i < trackingParams.curr_line.length - 1; i++) {
                 ctx.lineWidth = 3
                 ctx.strokeStyle = canvas.color
                 ctx.beginPath()
@@ -283,30 +297,42 @@ Item {
                 ctx.stroke()
             }
 
-            if(trackingParams.showMeasurement == true) {
-                for(i = 0; i < trackingParams.clutters.length; i++) {
-                    ctx.beginPath();
-                    ctx.fillStyle = colorTools.measurement
-                    x = trackingParams.clutters[i][0]
-                    y = trackingParams.clutters[i][1]
-                    ctx.arc(x, y, 3, 0, Math.PI * 2, false);
-                    ctx.fill();
-                }
-                for(i = 0; i < trackingParams.measurements.length; i++) {
-                    var curr_measurements = trackingParams.measurements[i]
-                    for(var j = 0; j < curr_measurements.length; j++) {
+            if(trackingParams.show_measurement == true) {
+
+                if(trackingParams.show_all_meas == true) {
+                    for(i = 0; i < trackingParams.all_measures.length; i++) {
                         ctx.beginPath();
                         ctx.fillStyle = colorTools.measurement
-                        x = curr_measurements[j][0]
-                        y = curr_measurements[j][1]
+                        x = trackingParams.all_measures[i][0]
+                        y = trackingParams.all_measures[i][1]
+                        ctx.arc(x, y, 3, 0, Math.PI * 2, false);
+                        ctx.fill();
+                    }
+                } else {
+                    for(i = 0; i < trackingParams.measurements.length; i++) {
+                        ctx.beginPath();
+                        ctx.fillStyle = colorTools.measurement
+                        x = trackingParams.measurements[i][0]
+                        y = trackingParams.measurements[i][1]
                         ctx.arc(x, y, 3, 0, Math.PI * 2, false);
                         ctx.fill();
                     }
                 }
+//                for(i = 0; i < trackingParams.measurements.length; i++) {
+//                    var curr_measurements = trackingParams.measurements[i]
+//                    for(var j = 0; j < curr_measurements.length; j++) {
+//                        ctx.beginPath();
+//                        ctx.fillStyle = colorTools.measurement
+//                        x = curr_measurements[j][0]
+//                        y = curr_measurements[j][1]
+//                        ctx.arc(x, y, 3, 0, Math.PI * 2, false);
+//                        ctx.fill();
+//                    }
+//                }
             }
 
 
-            if(trackingParams.showTruth == true) {
+            if(trackingParams.show_truth == true) {
                 for(i = 0; i < trackingParams.lines.length; i++) {
                     var curr_line = trackingParams.lines[i]
                     for(j = 0; j < curr_line.length - 1; j++) {
@@ -325,9 +351,9 @@ Item {
             }
 
 
-            if(trackingParams.showGNN   == true) drawPoints(ctx, trackingParams.gnn, colorTools.gnn)
-            if(trackingParams.showJPDA  == true) drawPoints(ctx, trackingParams.jpda, colorTools.jpda)
-            if(trackingParams.showMHT   == true) drawPoints(ctx, trackingParams.mht, colorTools.mht)
+            if(trackingParams.show_gnn   == true) drawPoints(ctx, trackingParams.gnn, colorTools.gnn)
+            if(trackingParams.show_jpda  == true) drawPoints(ctx, trackingParams.jpda, colorTools.jpda)
+            if(trackingParams.show_mht   == true) drawPoints(ctx, trackingParams.mht, colorTools.mht)
 
 
             for(i = 0; i < trackingParams.points.length; i++) {
@@ -415,6 +441,7 @@ Item {
             trackingParams.jpda             = Array(trackingParams.number_of_birth)
             trackingParams.mht              = Array(trackingParams.number_of_birth)
             trackingParams.lines            = Array(trackingParams.number_of_birth)
+            trackingParams.all_measures     = []
             for(var i = 0; i < trackingParams.number_of_birth; i++) {
                 trackingParams.gnn[i]       = []
                 trackingParams.jpda[i]      = []
@@ -445,9 +472,10 @@ Item {
             }
         }
         onMultiTrackingAddData: {
-            // trackingParams.clutters = []
+            trackingParams.measurements = []
             for(var i = 0; i < x.length; i++) {
-                trackingParams.clutters.push( [ parseInt(x[i]), parseInt(y[i]) ] )
+                trackingParams.all_measures.push( [ parseInt(x[i]), parseInt(y[i]) ] )
+                trackingParams.measurements.push( [ parseInt(x[i]), parseInt(y[i]) ] )
             }
             canvas.requestPaint()
         }

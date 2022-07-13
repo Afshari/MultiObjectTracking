@@ -97,6 +97,7 @@ signals:
     void multiTrackingAddItem(QString typeOfItem,  QList<qreal> x, QList<qreal> y);
     void multiTrackingAddData(QString typeOfItem,  QList<qreal> x, QList<qreal> y);
     void setNumberOfBirth(int nbirths);
+    void resetData();
 
 
 public slots:

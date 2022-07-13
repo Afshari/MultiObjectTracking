@@ -18,16 +18,12 @@ int main(int argc, char *argv[]) {
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/ui/main.qml"));
 
-//    DebugServer server(engine);
-//    server.start();
+    // DebugServer server(engine);
+    // server.start();
     DebugRun debug_run(engine);
     debug_run.run();
 
-
-//    UIConnectionHandler connectionHandler;
-//    engine.rootContext()->setContextProperty("backend", &connectionHandler);
     engine.load(url);
-
 
     return app.exec();
 }

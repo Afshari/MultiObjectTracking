@@ -1,5 +1,5 @@
-#ifndef MULTI_TRACKER_GNN_H
-#define MULTI_TRACKER_GNN_H
+#ifndef _MULTI_TRACKER_GNN_H_
+#define _MULTI_TRACKER_GNN_H_
 
 #include <QObject>
 #include <Eigen/Dense>
@@ -23,4 +23,4 @@ public:
 
 };
 
-#endif // MULTI_TRACKER_GNN_H
+#endif // _MULTI_TRACKER_GNN_H_

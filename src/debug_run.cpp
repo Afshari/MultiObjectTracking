@@ -64,6 +64,7 @@ void DebugRun::initSingleTrackers() {
 
 void DebugRun::initMultiTrackers() {
 
+    data_path = "1_1_c_100_PD_9";
     QMap<QString, QString> init_values;
     Utils::getDataFromFile(QString("debug_data/MOT/%1/init.txt").arg(data_path), init_values);
 
@@ -188,36 +189,14 @@ void DebugRun::qmlCommand(QString type) {
 
     if(type_of_tracking == "single") {
 
-//        QMap<QString, QString> res_values;
-//        Utils::getDataFromFile("debug_data/SOT/sim/res.txt", res_values);
-
-//        data_counter = 0;
-
-//        float x_mult_offset = 2;
-//        int y_add_offset = 50;
-//        getPoints(res_values, "NN_estimated_state", x_nn, y_nn, 0, y_add_offset, x_mult_offset, 1);
-//        getPoints(res_values, "GS_estimated_state", x_pda, y_pda, 0, y_add_offset, x_mult_offset, 1);
-//        getPoints(res_values, "PDA_estimated_state", x_gs, y_gs, 0, y_add_offset, x_mult_offset, 1);
-//        getPoints(res_values, "true_state", x_ground, y_ground, 0, y_add_offset, x_mult_offset, 1);
-
-        emit setNumberOfBirth(1);
+        initSingleTrackers();
+        emit resetData();
         data_counter = 0;
         timerId = startTimer(50);
 
     } else if(type_of_tracking == "multi") {
 
-        QMap<QString, QString> init_values;
-        Utils::getDataFromFile("debug_data/MOT/sim/init.txt", init_values);
-
-        nbirths = init_values["nbirths"].toInt();
-        number_of_steps = init_values["K"].toInt();
-        s = Utils::getVector2dData(init_values, "s", 2);
-        emit setNumberOfBirth(nbirths);
-        data_counter = 0;
-        timerId = startTimer(50);
-
-    } else if(type_of_tracking == "multi_calc") {
-
+        initMultiTrackers();
         emit setNumberOfBirth(nbirths);
         data_counter = 0;
         timerId = startTimer(50);
@@ -231,17 +210,9 @@ void DebugRun::timerEvent(QTimerEvent *event) {
 
     if(type_of_tracking == "single") {
 
-//        emit this->singleTrackingAddItem("nearest_neighbor", x_nn[data_counter], y_nn[data_counter]);
-//        emit this->singleTrackingAddItem("gaussian_sum", x_pda[data_counter], y_pda[data_counter]);
-//        emit this->singleTrackingAddItem("pda", x_gs[data_counter], y_gs[data_counter]);
-//        emit this->singleTrackingAddItem("true_state", x_ground[data_counter], y_ground[data_counter]);
-
-//        data_counter += 1;
-//        if(data_counter >= x_nn.size())
-//           killTimer(timerId);
-
         data_counter += 1;
-        QList<qreal> x, y, r, theta;
+        QList<qreal> lst_x, lst_y, r, theta;
+        double x, y;
 
         float x_mult_offset = 0.5;
         float y_mult_offset = 0.5;
@@ -256,74 +227,37 @@ void DebugRun::timerEvent(QTimerEvent *event) {
 
         tracker_nn->step(z);
         VectorXd state = tracker_nn->getX();
-        x.append(x_mult_offset * (x_add_offset + state(0, 0)));
-        y.append(y_mult_offset * (y_add_offset + state(1, 0)));
-        emit this->multiTrackingAddItem("gnn", x, y);
+        x = x_mult_offset * (x_add_offset + state(0, 0));
+        y = y_mult_offset * (y_add_offset + state(1, 0));
+        emit this->singleTrackingAddItem("nearest_neighbor", x, y);
 
-        x.clear();
-        y.clear();
         tracker_pda->step(z);
         state = tracker_pda->getX();
-        x.append(x_mult_offset * (x_add_offset + state(0, 0)));
-        y.append(y_mult_offset * (y_add_offset + state(1, 0)));
-        emit this->multiTrackingAddItem("jpda", x, y);
+        x = x_mult_offset * (x_add_offset + state(0, 0));
+        y = y_mult_offset * (y_add_offset + state(1, 0));
+        emit this->singleTrackingAddItem("pda", x, y);
 
-        x.clear();
-        y.clear();
         tracker_gaussian_sum->step(z);
         state = tracker_gaussian_sum->getX();
-        x.append(x_mult_offset * (x_add_offset + state(0, 0)));
-        y.append(y_mult_offset * (y_add_offset + state(1, 0)));
-        emit this->multiTrackingAddItem("mht", x, y);
+        x = x_mult_offset * (x_add_offset + state(0, 0));
+        y = y_mult_offset * (y_add_offset + state(1, 0));
+        emit this->singleTrackingAddItem("gaussian_sum", x, y);
 
-        getPoints(data_values, "var_x", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
-        emit this->multiTrackingAddItem("ground_truth", x, y);
+        getPoints(data_values, "var_x", lst_x, lst_y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
+        emit this->singleTrackingAddItem("ground_truth", lst_x[0], lst_y[0]);
 
         x_add_offset += (*s)(0, 0);
         y_add_offset += (*s)(1, 0);
         getPoints(data_values, "var_meas", r, theta);
-        polar2Cartesian(r, theta, x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
-        emit this->multiTrackingAddData("", x, y);
+        polar2Cartesian(r, theta, lst_x, lst_y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
+        emit this->singleTrackingAddData("", lst_x, lst_y);
 
-        emit this->multiTrackingAddItem("repaint", x, y);
+        emit this->singleTrackingAddItem("repaint", x, y);
 
         if(data_counter >= number_of_steps)
             killTimer(timerId);
 
     } else if(type_of_tracking == "multi") {
-
-        data_counter += 1;
-        QMap<QString, QString> data_values;
-        Utils::getDataFromFile(QString("debug_data/MOT/2_1/%1.txt").arg(data_counter), data_values);
-
-        QList<qreal> x, y, r, theta;
-
-        float x_mult_offset = 0.5;
-        float y_mult_offset = 0.5;
-        int x_add_offset = 1700;
-        int y_add_offset = 700;
-
-        getPoints(data_values, "var_gnn", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
-        emit this->multiTrackingAddItem("gnn", x, y);
-
-        getPoints(data_values, "var_jpda", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
-        emit this->multiTrackingAddItem("jpda", x, y);
-
-        getPoints(data_values, "var_mht", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
-        emit this->multiTrackingAddItem("mht", x, y);
-        getPoints(data_values, "var_x", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
-        emit this->multiTrackingAddItem("ground_truth", x, y);
-
-        x_add_offset += (*s)(0, 0);
-        y_add_offset += (*s)(1, 0);
-        getPoints(data_values, "var_meas", r, theta);
-        polar2Cartesian(r, theta, x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
-        emit this->multiTrackingAddData("", x, y);
-
-        if(data_counter >= number_of_steps)
-            killTimer(timerId);
-
-    } else if(type_of_tracking == "multi_calc") {
 
         data_counter += 1;
         QList<qreal> x, y, r, theta;
@@ -367,7 +301,7 @@ void DebugRun::timerEvent(QTimerEvent *event) {
         }
         emit this->multiTrackingAddItem("mht", x, y);
 
-        getPoints(data_values, "var_x", x, y) ;//, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
+        getPoints(data_values, "var_x", x, y, x_add_offset, y_add_offset, x_mult_offset, y_mult_offset);
         emit this->multiTrackingAddItem("ground_truth", x, y);
 
         x_add_offset += (*s)(0, 0);

@@ -12,45 +12,47 @@ void MultiTrackerJPDA::step(const MatrixXd &z, bool debug) {
 
     int n = this->states->size();
 
+    int m = z.cols();
     //// 1. Run EllipsoidalGating on each State
-    vector<ArrayXi> gated_index;
+    MatrixXi gated_index = MatrixXi::Zero(n, m);
     std::set<int> set_gated_index;
     for(int i = 0; i < n; i++) {
         auto gatingResult = this->estimator->ellipsoidalGating(*states->at(i), z, gating_size);
         MatrixXd gated_z = *std::get<1>(gatingResult);
 
         ArrayXi curr_gated_index = *std::get<0>(gatingResult);
-        // Utils::printEig<ArrayXi>(curr_gated_index, "curr_gated_index");
+        for(int j = 0; j < curr_gated_index.size(); j++)
+            gated_index(i, curr_gated_index(j)) = 1;
 
-        gated_index.push_back(curr_gated_index);
         for(int k = 0; k < curr_gated_index.size(); k++)
             set_gated_index.insert(curr_gated_index(k, 0));
     }
 
-    vector<int> vec_gated_index(set_gated_index.begin(), set_gated_index.end());
-    sort(vec_gated_index.begin(), vec_gated_index.end());
-    std::map<int, int> L_indices;
-    for(int i = 0; i < set_gated_index.size(); i++) {
-        L_indices[vec_gated_index[i]] = i;
+    ArrayXi post_index(set_gated_index.size());
+    int idx = 0;
+    for(auto it = set_gated_index.begin(); it != set_gated_index.end(); ++it, ++idx) {
+        post_index(idx) = *it;
     }
+    MatrixXi post_gated_index = gated_index(Eigen::all, post_index);
+    MatrixXd post_z = z(Eigen::all, post_index);
+
     //// 2. Create 'Cost Matrix' (L)
-    int m = set_gated_index.size();
+    m = post_gated_index.cols();
     MatrixXd L = MatrixXd::Constant(n, n+m, std::numeric_limits<double>::infinity());
     for(int i = 0; i < n; i++) {
-        int gated_size = gated_index[i].size();
-        for(int k = 0; k < gated_size; k++) {
-            int j = gated_index.at(i)[k];
-            int L_idx = L_indices[j];
+        for(int j = 0; j < post_gated_index.cols(); j++) {
+            if(post_gated_index(i, j) == 1) {
 
-            MatrixXd S    = (*estimator->H(states->at(i)->getX())) * states->at(i)->getP() * estimator->H(states->at(i)->getX())->transpose();
-            VectorXd zbar = *estimator->h(states->at(i)->getX());
+                MatrixXd S    = (*estimator->H(states->at(i)->getX())) * states->at(i)->getP() * estimator->H(states->at(i)->getX())->transpose();
+                VectorXd zbar = *estimator->h(states->at(i)->getX());
 
-            double formula_num_1 = log( sensor->get_P_D() / sensor->get_intensity() );
-            double formula_num_2 = -0.5 * log( (2 * M_PI * S).determinant() );
-            MatrixXd formula_mat_1 = -0.5 * (z(Eigen::all, j) - zbar).transpose() * S.inverse() * (z(Eigen::all, j) - zbar);
-            double formula_num_3 = formula_mat_1(0, 0);
+                double formula_num_1 = log( sensor->get_P_D() / sensor->get_intensity() );
+                double formula_num_2 = -0.5 * log( (2 * M_PI * S).determinant() );
+                MatrixXd formula_mat_1 = -0.5 * (post_z(Eigen::all, j) - zbar).transpose() * S.inverse() * (post_z(Eigen::all, j) - zbar);
+                double formula_num_3 = formula_mat_1(0, 0);
 
-            L(i, L_idx) = -( formula_num_1 + formula_num_2 + formula_num_3  );
+                L(i, j) = -( formula_num_1 + formula_num_2 + formula_num_3  );
+            }
         }
         L(i,m+i) = - log(1-sensor->get_P_D());
     }
@@ -122,7 +124,7 @@ void MultiTrackerJPDA::step(const MatrixXd &z, bool debug) {
         VectorXd ksi_i = VectorXd::Zero(z.rows(), 1);
         MatrixXd aux = MatrixXd::Zero(z.rows(), z.rows());
         for(int j = 0; j < m; j++) {
-            VectorXd KS = z(Eigen::all, j) - ( *estimator->h( states->at(i)->getX() ) );
+            VectorXd KS = post_z(Eigen::all, j) - ( *estimator->h( states->at(i)->getX() ) );
             ksi_ij.push_back(KS);
             ksi_i = ksi_i + beta(i,j) * KS;
             aux = aux + beta(i,j) * KS * KS.transpose();
