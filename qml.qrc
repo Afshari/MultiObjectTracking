@@ -26,15 +26,16 @@
         <file>ui/pages/draw2d.qml</file>
         <file>ui/images/svg_images/camera.svg</file>
         <file>ui/images/svg_images/paint.svg</file>
-        <file>ui/pages/singleObjectTracking.qml</file>
         <file>ui/images/svg_images/multi_tracking.svg</file>
         <file>ui/images/svg_images/single_tracking.svg</file>
-        <file>ui/pages/multiObjectTracking.qml</file>
         <file>ui/images/svg_images/eraser.svg</file>
         <file>ui/images/svg_images/draw_line.svg</file>
         <file>ui/images/svg_images/measurement.svg</file>
         <file>ui/images/svg_images/clutter.svg</file>
         <file>ui/controls/ButtonLabel.qml</file>
         <file>ui/images/svg_images/run.svg</file>
+        <file>ui/controls/CustomSwitch.qml</file>
+        <file alias="ui/pages/multiObjectTracking.qml">ui/pages/app_multiObjectTracking.qml</file>
+        <file alias="ui/pages/singleObjectTracking.qml">ui/pages/app_singleObjectTracking.qml</file>
     </qresource>
 </RCC>

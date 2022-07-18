@@ -350,7 +350,7 @@ Window {
                             isActiveMenu: false
                             onClicked: {
                                 if(btnSingleObjectTracking.isActiveMenu == false) {
-                                    internal.pageNavigation("pages/singleObjectTracking.qml")
+                                    internal.pageNavigation("/ui/pages/singleObjectTracking.qml")
                                     btnSingleObjectTracking.isActiveMenu = true
                                 }
                             }
@@ -364,7 +364,7 @@ Window {
                             isActiveMenu: false
                             onClicked: {
                                 if(btnMultiObjectTracking.isActiveMenu == false) {
-                                    internal.pageNavigation("pages/multiObjectTracking.qml")
+                                    internal.pageNavigation("/ui/pages/multiObjectTracking.qml")
                                     btnMultiObjectTracking.isActiveMenu = true
                                 }
                             }

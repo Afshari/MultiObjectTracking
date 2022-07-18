@@ -1,13 +1,8 @@
 #include "inc/debug_run.h"
 
-// [✓] - Read data from res.txt File
-// [✓] - Define 4 arrays in Javascript for 'NearestNeighbor, PDA, GaussianSum, GroundTruth'
-// [✓] - Show Measurements in UI
-// [✓] - Define function to initialize Trackers
-// [✓] - Define initialization variables as Class Members
-// [✓] - Write function in MultiTracker to getX by index of Object
-// [ ] - Add for-loop to 'initTrackers' to get result of 'tracker_mht' and compare to result in text file
-// [✓] - Show result of 'tracker_gnn' in UI
+// ✓
+// [✓] - Create a function to calculate velocity
+// [ ] -
 
 
 DebugRun::DebugRun(const QQmlApplicationEngine &engine, QObject *parent) : QObject(parent) {
@@ -20,16 +15,15 @@ DebugRun::DebugRun(const QQmlApplicationEngine &engine, QObject *parent) : QObje
     // data_path = "1_1_c_20_PD_9";
     // data_path = "1_1_c_200_PD_9"; // --> Bug in JPDA
     // data_path = "1_2_c_30_PD_7"; --> Bad Result for GNN & JPDA
-    initSingleTrackers();
+    // initSingleTrackers();
     // initMultiTrackers();
 }
 
 void DebugRun::initSingleTrackers() {
 
+    data_path = "4_1_c_60_PD_7_v_p10_hd_d60";
     QMap<QString, QString> init_values;
     Utils::getDataFromFile(QString("debug_data/SOT/%1/init.txt").arg(data_path), init_values);
-
-    qDebug() << init_values;
 
     int K = init_values["K"].toInt();
     number_of_steps = K;
@@ -44,11 +38,19 @@ void DebugRun::initSingleTrackers() {
     float w_min = init_values["wmin"].toFloat();
 
     shared_ptr<VectorXd> init_x = Utils::getVectorXdData(init_values, "initial_state_x", 5);
+    (*init_x)(4, 0) = 0;
     shared_ptr<MatrixXd> init_P = Utils::getSquareMatrixXdData(init_values, "initial_state_P", 5);
+
+    QMap<QString, QString> data_values;
+    Utils::getDataFromFile(QString("debug_data/SOT/%1/%2.txt").arg(data_path, QString::number(1)), data_values);
+    VectorXd x_1 = *Utils::getVectorXdData(data_values, "var_x", 2);
+    Utils::getDataFromFile(QString("debug_data/SOT/%1/%2.txt").arg(data_path, QString::number(2)), data_values);
+    VectorXd x_2 = *Utils::getVectorXdData(data_values, "var_x", 2);
+    double velocity = Utils::getVelocity(x_1, x_2);
+    (*init_x)(2, 0) = velocity;
 
     s = Utils::getVector2dData(init_values, "s", 2);
     range_c = Utils::getSquareMatrixXdData(init_values, "range_c", 2);
-
 
     shared_ptr<Sensor> sensor = make_shared<Sensor>(P_D, lambda_c, *range_c);
     shared_ptr<Transition2dTurn> transition_model = make_shared<Transition2dTurn>(T, sigma_v, sigma_omega);
@@ -68,16 +70,12 @@ void DebugRun::initMultiTrackers() {
     QMap<QString, QString> init_values;
     Utils::getDataFromFile(QString("debug_data/MOT/%1/init.txt").arg(data_path), init_values);
 
-    qDebug() << init_values;
-
     int K = init_values["K"].toInt();
     number_of_steps = K;
     int M = init_values["M"].toInt();
     float P_D = init_values["P_D"].toFloat();
-    // float P_G = init_values["P_G"].toFloat();
     int T = init_values["T"].toInt();
     int lambda_c = init_values["lambda_c"].toFloat();
-    // int mergeing_threshold = init_values["merging_threshold"].toInt();
     nbirths = init_values["nbirths"].toInt();
     float sigma_omega = init_values["sigmaOmega"].toFloat();
     float sigma_v = init_values["sigmaV"].toFloat();
@@ -93,6 +91,11 @@ void DebugRun::initMultiTrackers() {
     measurement_model = make_shared<MeasurementRangeBearing>(sigma_r, sigma_b, s);
     estimator = make_shared<Estimator>(measurement_model, transition_model);
 
+    QMap<QString, QString> data_values;
+    Utils::getDataFromFile(QString("debug_data/MOT/%1/%2.txt").arg(data_path, QString::number(1)), data_values);
+    MatrixXd x1 = *Utils::getRectangleMatrixXdData(data_values, "var_full_x", 5, 4);
+    Utils::getDataFromFile(QString("debug_data/MOT/%1/%2.txt").arg(data_path, QString::number(2)), data_values);
+    MatrixXd x2 = *Utils::getRectangleMatrixXdData(data_values, "var_full_x", 5, 4);
 
     PtrVecState states = make_shared<vector<shared_ptr<State>>>();
     for(int i = 1; i <= 4; i++) {
@@ -101,6 +104,9 @@ void DebugRun::initMultiTrackers() {
         Utils::getDataFromFile(QString("debug_data/MOT/%1/init_states_%2.txt").arg(data_path, QString::number(i)), state_values);
 
         shared_ptr<VectorXd> x = Utils::getVectorXdData(state_values, "var_x", 5);
+        double velocity = Utils::getVelocity(x1(Eigen::all, i-1), x2(Eigen::all, i-1));
+        (*x)(2, 0) = velocity;
+        (*x)(4, 0) = 0;
         shared_ptr<MatrixXd> P = Utils::getSquareMatrixXdData(state_values, "var_P", 5);
 
         states->push_back(make_shared<State>(x, P));
@@ -115,6 +121,9 @@ void DebugRun::initMultiTrackers() {
         Utils::getDataFromFile(QString("debug_data/MOT/%1/init_states_%2.txt").arg(data_path, QString::number(i)), state_values);
 
         shared_ptr<VectorXd> x = Utils::getVectorXdData(state_values, "var_x", 5);
+        double velocity = Utils::getVelocity(x1(Eigen::all, i-1), x2(Eigen::all, i-1));
+        (*x)(2, 0) = velocity;
+        (*x)(4, 0) = 0;
         shared_ptr<MatrixXd> P = Utils::getSquareMatrixXdData(state_values, "var_P", 5);
 
         states->push_back(make_shared<State>(x, P));
@@ -128,6 +137,9 @@ void DebugRun::initMultiTrackers() {
         Utils::getDataFromFile(QString("debug_data/MOT/%1/init_states_%2.txt").arg(data_path, QString::number(i)), state_values);
 
         shared_ptr<VectorXd> x = Utils::getVectorXdData(state_values, "var_x", 5);
+        double velocity = Utils::getVelocity(x1(Eigen::all, i-1), x2(Eigen::all, i-1));
+        (*x)(2, 0) = velocity;
+        (*x)(4, 0) = 0;
         shared_ptr<MatrixXd> P = Utils::getSquareMatrixXdData(state_values, "var_P", 5);
 
         states->push_back(make_shared<State>(x, P));
@@ -137,20 +149,21 @@ void DebugRun::initMultiTrackers() {
 
 void DebugRun::run() {
 
-    // handleEllipsoidalGating();
-    // handlePredictedLikelihood();
-    // handleMomentMatching();
-    // handlePrune();
-    // handleCap();
-    // handleNearestNeighbor();
-    // handlePDA();
-    // handleGaussianSum();
-    // handleGNN();
-    // handleJPDA();
-    // handleMHT();
-    // handleIndices();
+    //handleEllipsoidalGating();
+    //handlePredictedLikelihood();
+    //handleMomentMatching();
+    //handlePrune();
+    //handleCap();
+    //handleNearestNeighbor();
+    //handlePDA();
+    //handleGaussianSum();
+    //handleGNN();
+    //handleJPDA();
+    //handleMHT();
+    //handleIndices();
+    handleSingleVelocity();
+    //handleMultiVelocity();
 }
-
 
 void DebugRun::receiveFromQml(QString value) {
 
@@ -219,7 +232,7 @@ void DebugRun::timerEvent(QTimerEvent *event) {
         int x_add_offset = 1700;
         int y_add_offset = 1200;
 
-        qDebug() << "i: " << data_counter << "--------------------------";
+        //qDebug() << "i: " << data_counter << "--------------------------";
         QMap<QString, QString> data_values;
         Utils::getDataFromFile(QString("debug_data/SOT/%1/%2.txt").arg(data_path, QString::number(data_counter)), data_values);
 
@@ -267,7 +280,7 @@ void DebugRun::timerEvent(QTimerEvent *event) {
         int x_add_offset = 1700;
         int y_add_offset = 1200;
 
-        std::cout << "i: " << data_counter << "--------------------------" << std::endl;
+        //std::cout << "i: " << data_counter << "--------------------------" << std::endl;
         QMap<QString, QString> data_values;
         Utils::getDataFromFile(QString("debug_data/MOT/%1/%2.txt").arg(data_path, QString::number(data_counter)), data_values);
 
@@ -552,6 +565,8 @@ void DebugRun::handleNearestNeighbor() {
         Utils::getDataFromFile(QString("debug_data/SOT/%1/%2.txt").arg(path, QString::number(i)), data_values);
 
         MatrixXd z = Utils::getMeasurementData(data_values);
+        std::cout << z << std::endl;
+        std::cout << "---------------------------" << std::endl;
         VectorXd ref_x = *Utils::getVectorXdData(data_values, "var_full_x", 5);
         tracker.step(z);
         double diff = abs(ref_x.norm() - tracker.getUpdatedX().norm());
@@ -968,6 +983,79 @@ void DebugRun::handleIndices() {
     }
 
 }
+
+void DebugRun::handleSingleVelocity() {
+
+    QStringList all_path = {"4_1_c_60_PD_7_v_n10_hd_d60", "4_1_c_60_PD_7_v_p10_hd_d60",
+                            "4_1_c_60_PD_7_v_n10_hd_d180", "4_1_c_60_PD_7_v_p10_hd_d180"};
+
+    for(QString &path : all_path) {
+
+        //QString path = "";
+        QMap<QString, QString> init_values;
+        Utils::getDataFromFile(QString("debug_data/SOT/%1/init.txt").arg(path), init_values);
+
+        std::cout << init_values["initial_state_x"].toStdString() << std::endl;
+
+        VectorXd initial_state_x = *Utils::getVectorXdData(init_values, "initial_state_x", 5);
+        QMap<QString, QString> data_values;
+        Utils::getDataFromFile(QString("debug_data/SOT/%1/%2.txt").arg(path, QString::number(1)), data_values);
+        VectorXd x_1 = *Utils::getVectorXdData(data_values, "true_x", 5);
+        Utils::getDataFromFile(QString("debug_data/SOT/%1/%2.txt").arg(path, QString::number(2)), data_values);
+        VectorXd x_2 = *Utils::getVectorXdData(data_values, "true_x", 5);
+        double velocity = Utils::getVelocity(x_1, x_2);
+        double heading = Utils::getHeading(x_1, x_2);
+        std::cout << "Velocity: " << velocity << std::endl << std::endl;
+        std::cout << "Heading: " << heading << std::endl << std::endl;
+    }
+}
+
+
+void DebugRun::handleMultiVelocity() {
+
+    QString path = "1_1_c_100_PD_9";
+    QMap<QString, QString> init_values;
+    Utils::getDataFromFile(QString("debug_data/MOT/%1/init.txt").arg(path), init_values);
+
+    QMap<QString, QString> data_values;
+    Utils::getDataFromFile(QString("debug_data/MOT/%1/%2.txt").arg(path, QString::number(1)), data_values);
+    MatrixXd x1 = *Utils::getRectangleMatrixXdData(data_values, "var_full_x", 5, 4);
+    //std::cout << x1 << std::endl;
+    Utils::getDataFromFile(QString("debug_data/MOT/%1/%2.txt").arg(path, QString::number(2)), data_values);
+    MatrixXd x2 = *Utils::getRectangleMatrixXdData(data_values, "var_full_x", 5, 4);
+    //std::cout << x2 << std::endl;
+
+    for(int i = 1; i <= 4; i++) {
+
+        QMap<QString, QString> state_values;
+        Utils::getDataFromFile(QString("debug_data/MOT/%1/init_states_%2.txt").arg(path, QString::number(i)), state_values);
+
+        VectorXd x = *Utils::getVectorXdData(state_values, "var_x", 5);
+        double velocity = Utils::getVelocity(x1(Eigen::all, i-1), x2(Eigen::all, i-1));
+
+        x(2, 0) = velocity;
+        x(4, 0) = 0;
+        Utils::printEigen<VectorXd>(x, "init_x");
+        std::cout << "Velocity: " << velocity << std::endl;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -10,7 +10,6 @@ Item {
         id: trackingParams
         property variant points:                    []
         property variant line:                      []
-        property variant clutters:                  []
         property variant measurements:              []
         property variant all_measure:               []
         property variant nearest_neighbor:          []
@@ -20,26 +19,27 @@ Item {
         property bool show_pda:                     true
         property bool show_gaussian_sum:            true
         property bool show_measurement:             true
-        property bool show_all_meas:                true
+        property bool show_all_meas:                false
         property bool show_truth:                   true
-
     }
 
-    function drawPoints(ctx, items, color) {
+    function drawPoints(ctx, items, color, radius=5, should_fill=false) {
 
         var x = 0;
         var y = 0;
         for(var i = 0; i < items.length; i++) {
             ctx.beginPath();
-            ctx.strokeStyle = color
+            if(should_fill === true)    ctx.fillStyle = color
+            else                        ctx.strokeStyle = color
             x = items[i][0]
             y = items[i][1]
-            ctx.arc(x, y, 5, 0, Math.PI * 2, false);
-            ctx.stroke();
+            ctx.arc(x, y, radius, 0, Math.PI * 2, false);
+            if(should_fill === true)    ctx.fill();
+            else                        ctx.stroke();
         }
     }
 
-    function drawLegends(ctx, text_start_y, color, txt, TEXT_START_X, text_start_y, SYM_START_X) {
+    function drawLegend(ctx, text_start_y, color, txt, TEXT_START_X, text_start_y, SYM_START_X) {
 
         ctx.beginPath();
         ctx.fillStyle = color;
@@ -48,17 +48,40 @@ Item {
         ctx.fill()
     }
 
+    function drawLegends(ctx) {
+
+        ctx.beginPath();
+        ctx.fillStyle = ctx.fillStyle = Qt.rgba(0.3, 0.3, 0.3, 1);
+        ctx.rect(parent.width - 180, 20, 150, 170);
+        ctx.fill();
+
+        const TEXT_START_X = parent.width - 170;
+        const SYM_START_X  = parent.width - 50;
+        var text_start_y = 20;
+        ctx.font = '16px Verdana'
+
+        text_start_y += 30;
+        drawLegend(ctx, text_start_y, colorTools.truth, "Truth", TEXT_START_X, text_start_y, SYM_START_X);
+        text_start_y += 30;
+        drawLegend(ctx, text_start_y, colorTools.measurement, "Measure", TEXT_START_X, text_start_y, SYM_START_X);
+        text_start_y += 30;
+        drawLegend(ctx, text_start_y, colorTools.nearest_neighbor, "NN", TEXT_START_X, text_start_y, SYM_START_X);
+        text_start_y += 30;
+        drawLegend(ctx, text_start_y, colorTools.pda, "PDA", TEXT_START_X, text_start_y, SYM_START_X);
+        text_start_y += 30;
+        drawLegend(ctx, text_start_y, colorTools.gaussian_sum, "GS", TEXT_START_X, text_start_y, SYM_START_X);
+    }
+
     QtObject {
         id: stateMachine
         readonly property int draw_line :  1
-        readonly property int clutter   :  2
         property int state: draw_line
     }
 
     Row {
 
         id: colorTools
-        height: btnClear.height
+        height: btnRun.height
         width: parent.width - 20
         spacing: 10
         anchors {
@@ -73,71 +96,10 @@ Item {
         property color measurement:         "white"
 
         ButtonLabel {
-            id: btnClear
-            btnText: "erase"
-            btnIconSource: "../../ui/images/svg_images/eraser.svg"
-            onClicked: {
-                trackingParams.points       = []
-                trackingParams.line         = []
-                trackingParams.clutters     = []
-                trackingParams.measurements = []
-                canvas.requestPaint()
-            }
-        }
-
-        ButtonLabel {
-            id: btnDrawLine
-            btnText: "draw"
-            btnIconSource: "../../ui/images/svg_images/draw_line.svg"
-            onClicked: {
-                if(stateMachine.state == stateMachine.clutter) {
-                    stateMachine.state = stateMachine.draw_line
-                }
-            }
-        }
-
-        ButtonLabel {
-            id: btnClutter
-            btnText: "clutter"
-            btnIconSource: "../../ui/images/svg_images/clutter.svg"
-            onClicked: {
-                if(stateMachine.state == stateMachine.draw_line) {
-                    stateMachine.state = stateMachine.clutter
-                }
-            }
-        }
-
-        ButtonLabel {
-            id: btnMeasurements
-            btnText: "measure"
-            btnIconSource: "../../ui/images/svg_images/measurement.svg"
-            onClicked: {
-                console.log("Button Measure Clicked");
-                trackingParams.measurements = []
-                for(var i = 0; i < trackingParams.points.length; i++) {
-                    var x = trackingParams.points[i][0] + (Math.random() - 0.5) * 30
-                    var y = trackingParams.points[i][1] + (Math.random() - 0.5) * 30
-                    trackingParams.measurements.push( [ parseInt(x), parseInt(y) ] )
-                }
-                canvas.requestPaint();
-                backend.qmlCommand();
-            }
-        }
-
-        ButtonLabel {
             id: btnRun
             btnText: "Run"
             btnIconSource: "../../ui/images/svg_images/run.svg"
             onClicked: {
-                // console.log( trackingParams.measurements )
-//                var xs = [];
-//                var ys = [];
-//                for(var i = 0; i < trackingParams.measurements.length; i++) {
-//                    xs.push( trackingParams.measurements[i][0] )
-//                    ys.push( trackingParams.measurements[i][1] )
-//                }
-                // backend.getMeasurements( xs, ys )
-                // backend.receiveFromQml("OK");
                 backend.qmlCommand("single");
             }
         }
@@ -207,7 +169,7 @@ Item {
         }
         CustomSwitch {
             height: parent.height - 5
-            checked: true
+            checked: false
 
             Label {
                 text: "All Meas"
@@ -254,7 +216,6 @@ Item {
         property color color: colorTools.truth
 
         onPaint: {
-            // console.log("onPaint")
             var ctx = getContext('2d')
 
             ctx.fillStyle = Qt.rgba(0.5, 0.5, 0.5, 1);
@@ -278,92 +239,25 @@ Item {
                 }
             }
 
+            if(trackingParams.show_measurement == true) {
+
+                if(trackingParams.show_all_meas == true) {
+                    drawPoints(ctx, trackingParams.all_measure, colorTools.measurement, 3, true)
+                } else {
+                    drawPoints(ctx, trackingParams.measurements, colorTools.measurement, 3, true)
+                }
+            }
+
             if(trackingParams.show_nearest_neighbor == true)    drawPoints(ctx, trackingParams.nearest_neighbor, colorTools.nearest_neighbor)
             if(trackingParams.show_pda == true)                 drawPoints(ctx, trackingParams.pda, colorTools.pda)
             if(trackingParams.show_gaussian_sum == true)        drawPoints(ctx, trackingParams.gaussian_sum, colorTools.gaussian_sum)
 
-
-            if(trackingParams.show_measurement == true) {
-
-                if(trackingParams.show_all_meas == true) {
-                    for(i = 0; i < trackingParams.all_measure.length; i++) {
-                        ctx.beginPath();
-                        ctx.fillStyle = colorTools.measurement
-                        x = trackingParams.all_measure[i][0]
-                        y = trackingParams.all_measure[i][1]
-                        ctx.arc(x, y, 3, 0, Math.PI * 2, false);
-                        ctx.fill();
-                    }
-                } else {
-                    for(i = 0; i < trackingParams.measurements.length; i++) {
-                        ctx.beginPath();
-                        ctx.fillStyle = colorTools.measurement
-                        x = trackingParams.measurements[i][0]
-                        y = trackingParams.measurements[i][1]
-                        ctx.arc(x, y, 3, 0, Math.PI * 2, false);
-                        ctx.fill();
-                    }
-                }
-            }
-
-            ctx.beginPath();
-            ctx.fillStyle = ctx.fillStyle = Qt.rgba(0.3, 0.3, 0.3, 1);
-            ctx.rect(parent.width - 180, 20, 150, 170);
-            ctx.fill();
-
-            const TEXT_START_X = parent.width - 170;
-            const SYM_START_X  = parent.width - 50;
-            var text_start_y = 20;
-            ctx.font = '16px Verdana'
-
-
-            text_start_y += 30;
-            drawLegends(ctx, text_start_y, colorTools.truth, "Truth", TEXT_START_X, text_start_y, SYM_START_X);
-            text_start_y += 30;
-            drawLegends(ctx, text_start_y, colorTools.measurement, "Measure", TEXT_START_X, text_start_y, SYM_START_X);
-            text_start_y += 30;
-            drawLegends(ctx, text_start_y, colorTools.nearest_neighbor, "NN", TEXT_START_X, text_start_y, SYM_START_X);
-            text_start_y += 30;
-            drawLegends(ctx, text_start_y, colorTools.pda, "PDA", TEXT_START_X, text_start_y, SYM_START_X);
-            text_start_y += 30;
-            drawLegends(ctx, text_start_y, colorTools.gaussian_sum, "GS", TEXT_START_X, text_start_y, SYM_START_X);
-
+            drawLegends(ctx);
         }
 
         MouseArea {
             id: area
             anchors.fill: parent
-            onPressed: {
-                if(stateMachine.state == stateMachine.draw_line) {
-                    trackingParams.points = []
-                    trackingParams.points.push( [ parseInt(mouseX), parseInt(mouseY) ] )
-                    trackingParams.line = []
-                } else if(stateMachine.state == stateMachine.clutter) {
-                    var x = parseInt( mouseX )
-                    var y = parseInt( mouseY )
-                    for(var i = 0; i < 5; i++) {
-                        var currX = x + (Math.random() - 0.5) * 100
-                        var currY = y + (Math.random() - 0.5) * 100
-                        trackingParams.clutters.push( [ currX, currY ] )
-                    }
-                    canvas.requestPaint()
-                }
-            }
-            onReleased: {
-                // trackingParams.path.push( trackingParams.currPoints )
-                // trackingParams.currPoints = []
-            }
-            onPositionChanged: {
-                if(stateMachine.state == stateMachine.draw_line) {
-                    trackingParams.line.push( [parseInt(mouseX), parseInt(mouseY)] )
-                    var lastX = trackingParams.points[trackingParams.points.length - 1][0]
-                    var lastY = trackingParams.points[trackingParams.points.length - 1][1]
-                    if( Math.hypot(lastX - mouseX, lastY - mouseY) > 40) {
-                        trackingParams.points.push( [ parseInt(mouseX), parseInt(mouseY) ] )
-                    }
-                }
-                canvas.requestPaint()
-            }
         }
     }
 

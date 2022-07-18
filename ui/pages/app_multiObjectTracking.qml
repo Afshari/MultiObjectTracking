@@ -149,8 +149,6 @@ Item {
 //                    ys.push( trackingParams.measurements[i][1] )
 //                }
                 // backend.getMeasurements( xs, ys )
-                 backend.qmlCommand("multi");
-//                backend.qmlCommand("single");
             }
         }
         ButtonLabel {
@@ -435,50 +433,50 @@ Item {
 
         target: backend
 
-        onSetNumberOfBirth: {
-            trackingParams.number_of_birth  = nbirths
-            trackingParams.gnn              = Array(trackingParams.number_of_birth)
-            trackingParams.jpda             = Array(trackingParams.number_of_birth)
-            trackingParams.mht              = Array(trackingParams.number_of_birth)
-            trackingParams.lines            = Array(trackingParams.number_of_birth)
-            trackingParams.all_measures     = []
-            for(var i = 0; i < trackingParams.number_of_birth; i++) {
-                trackingParams.gnn[i]       = []
-                trackingParams.jpda[i]      = []
-                trackingParams.mht[i]       = []
-                trackingParams.lines[i]     = []
-            }
-        }
+//        onSetNumberOfBirth: {
+//            trackingParams.number_of_birth  = nbirths
+//            trackingParams.gnn              = Array(trackingParams.number_of_birth)
+//            trackingParams.jpda             = Array(trackingParams.number_of_birth)
+//            trackingParams.mht              = Array(trackingParams.number_of_birth)
+//            trackingParams.lines            = Array(trackingParams.number_of_birth)
+//            trackingParams.all_measures     = []
+//            for(var i = 0; i < trackingParams.number_of_birth; i++) {
+//                trackingParams.gnn[i]       = []
+//                trackingParams.jpda[i]      = []
+//                trackingParams.mht[i]       = []
+//                trackingParams.lines[i]     = []
+//            }
+//        }
 
-        onMultiTrackingAddItem: {
-            if(typeOfItem.valueOf() === "gnn") {
-                for(var i = 0; i < trackingParams.number_of_birth; i++) {
-                    trackingParams.gnn[i].push( [ parseInt(x[i]), parseInt(y[i]) ] )
-                }
-            } else if(typeOfItem.valueOf() === "jpda") {
-                for(i = 0; i < trackingParams.number_of_birth; i++) {
-                    trackingParams.jpda[i].push( [ parseInt(x[i]), parseInt(y[i]) ] )
-                }
-            } else if(typeOfItem.valueOf() === "mht") {
-                for(i = 0; i < trackingParams.number_of_birth; i++) {
-                    trackingParams.mht[i].push( [ parseInt(x[i]), parseInt(y[i]) ] )
-                }
-            } else if(typeOfItem.valueOf() === "ground_truth") {
-                for(i = 0; i < trackingParams.number_of_birth; i++) {
-                    trackingParams.lines[i].push( [ parseInt(x[i]), parseInt(y[i]) ] )
-                }
-            } else if(typeOfItem.valueOf() === "repaint") {
-                canvas.requestPaint()
-            }
-        }
-        onMultiTrackingAddData: {
-            trackingParams.measurements = []
-            for(var i = 0; i < x.length; i++) {
-                trackingParams.all_measures.push( [ parseInt(x[i]), parseInt(y[i]) ] )
-                trackingParams.measurements.push( [ parseInt(x[i]), parseInt(y[i]) ] )
-            }
-            canvas.requestPaint()
-        }
+//        onMultiTrackingAddItem: {
+//            if(typeOfItem.valueOf() === "gnn") {
+//                for(var i = 0; i < trackingParams.number_of_birth; i++) {
+//                    trackingParams.gnn[i].push( [ parseInt(x[i]), parseInt(y[i]) ] )
+//                }
+//            } else if(typeOfItem.valueOf() === "jpda") {
+//                for(i = 0; i < trackingParams.number_of_birth; i++) {
+//                    trackingParams.jpda[i].push( [ parseInt(x[i]), parseInt(y[i]) ] )
+//                }
+//            } else if(typeOfItem.valueOf() === "mht") {
+//                for(i = 0; i < trackingParams.number_of_birth; i++) {
+//                    trackingParams.mht[i].push( [ parseInt(x[i]), parseInt(y[i]) ] )
+//                }
+//            } else if(typeOfItem.valueOf() === "ground_truth") {
+//                for(i = 0; i < trackingParams.number_of_birth; i++) {
+//                    trackingParams.lines[i].push( [ parseInt(x[i]), parseInt(y[i]) ] )
+//                }
+//            } else if(typeOfItem.valueOf() === "repaint") {
+//                canvas.requestPaint()
+//            }
+//        }
+//        onMultiTrackingAddData: {
+//            trackingParams.measurements = []
+//            for(var i = 0; i < x.length; i++) {
+//                trackingParams.all_measures.push( [ parseInt(x[i]), parseInt(y[i]) ] )
+//                trackingParams.measurements.push( [ parseInt(x[i]), parseInt(y[i]) ] )
+//            }
+//            canvas.requestPaint()
+//        }
     }
 }
 

@@ -244,5 +244,31 @@ pair<int, int> Utils::getLen(const QMap<QString, QString>& values, const string&
     return result;
 }
 
+double Utils::getVelocity(const VectorXd& x1, const VectorXd& x2) {
 
+    double velocity = sqrt( pow(x2(1, 0) - x1(1, 0), 2) + pow(x2(0, 0) - x1(0, 0), 2) );
+    int sign = 1;
+    if((x2(1, 0) - x1(1, 0)) > (x2(0, 0) - x1(0, 0)))
+        sign = (x2(1, 0) - x1(1, 0)) > 0 ? 1 : -1;
+    else
+        sign = (x2(0, 0) - x1(0, 0)) > 0 ? 1 : -1;
+    velocity *= sign;
+
+    return velocity;
+}
+
+double Utils::getHeading(const VectorXd& x1, const VectorXd& x2) {
+
+    double heading = atan2(x2(1, 0) - x1(1, 0), x2(0, 0) - x1(0, 0) );
+    int sign = 1;
+    if((x2(1, 0) - x1(1, 0)) > (x2(0, 0) - x1(0, 0)))
+        sign = (x2(1, 0) - x1(1, 0)) > 0 ? 1 : -1;
+    else
+        sign = (x2(0, 0) - x1(0, 0)) > 0 ? 1 : -1;
+
+    if(sign == -1)
+        heading = heading + M_PI;
+
+    return heading;
+}
 

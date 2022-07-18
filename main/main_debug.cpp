@@ -18,12 +18,9 @@ int main(int argc, char *argv[]) {
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/ui/main.qml"));
 
-    // DebugServer server(engine);
-    // server.start();
     DebugRun debug_run(engine);
     debug_run.run();
-
-    engine.load(url);
+    //engine.load(url);
 
     return app.exec();
 }

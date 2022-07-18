@@ -67,6 +67,9 @@ public:
     static MatrixXd getMeasurementData(const QMap<QString, QString>& values, const string& field_name = "var_meas");
     static pair<int, int> getLen(const QMap<QString, QString>& values, const string& field_name);
 
+    static double getVelocity(const VectorXd& x1, const VectorXd& x2);
+    static double getHeading(const VectorXd& x1, const VectorXd& x2);
+
 };
 
 

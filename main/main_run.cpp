@@ -16,8 +16,8 @@ int main(int argc, char *argv[]) {
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/ui/main.qml"));
 
-    UIHandler uiHandler;
-    engine.rootContext()->setContextProperty("backend", &uiHandler);
+    UIHandler uiHandler(engine);
+    //engine.rootContext()->setContextProperty("backend", &uiHandler);
     engine.load(url);
 
     return app.exec();

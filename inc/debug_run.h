@@ -89,6 +89,8 @@ protected:
     void handleJPDA();
     void handleMHT();
     void handleIndices();
+    void handleSingleVelocity();
+    void handleMultiVelocity();
 
 
 signals:
