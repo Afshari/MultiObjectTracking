@@ -824,10 +824,10 @@ void DebugRun::handleMHT() {
     int K = init_values["K"].toInt();
     int M = init_values["M"].toInt();
     float P_D = init_values["P_D"].toFloat();
-    // float P_G = init_values["P_G"].toFloat();
+    /float P_G = init_values["P_G"].toFloat();
     int T = init_values["T"].toInt();
     int lambda_c = init_values["lambda_c"].toFloat();
-//    int mergeing_threshold = init_values["merging_threshold"].toInt();
+    //int mergeing_threshold = init_values["merging_threshold"].toInt();
     int nbirths = init_values["nbirths"].toInt();
     float sigma_omega = init_values["sigmaOmega"].toFloat();
     float sigma_v = init_values["sigmaV"].toFloat();

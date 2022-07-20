@@ -10,7 +10,7 @@ MultiTrackerGNN::MultiTrackerGNN(shared_ptr<Estimator> estimator, PtrVecState st
 void MultiTrackerGNN::step(const MatrixXd &z, bool debug) {
 
     int n = this->states->size();
-    // Utils::printf("gating_size: %f", gating_size);
+    //Utils::printEigen<VectorXd>(states->at(0)->getX(), "x");
 
     int m = z.cols();
     MatrixXi gated_index = MatrixXi::Zero(n, m);

@@ -15,7 +15,6 @@ Item {
         }
     }
 
-
     QtObject {
 
         id:                                         tracking_params
@@ -59,13 +58,12 @@ Item {
         }
         xs.push(measurements[curr_pointer][0]);
         ys.push(measurements[curr_pointer][1]);
-        backend.getMeasurements(xs, ys);
+        backend.singleMeasurements(xs, ys);
     }
 
     function drawPoints(ctx, items, color, radius=5, should_fill=false) {
 
-        var x = 0;
-        var y = 0;
+        var x, y;
         for(var i = 0; i < items.length; i++) {
             ctx.beginPath();
             if(should_fill === true)        ctx.fillStyle = color
@@ -80,8 +78,7 @@ Item {
 
     function drawLine(ctx, points, curr_pointer) {
 
-        var x = 0;
-        var y = 0;
+        var x, y;
         for(var i = 0; i < curr_pointer; i++) {
             ctx.lineWidth = 3
             ctx.strokeStyle = canvas.color
@@ -279,7 +276,9 @@ Item {
                 }
 
                 tracking_params.lambda_c = parseInt(tracking_params.clutters.length / tracking_params.measurements.length);
-                backend.initSingleTrackers(tracking_params.points[0], tracking_params.points[1], tracking_params.lambda_c);
+                backend.initSingleTrackers(tracking_params.points[0][0], tracking_params.points[0][1],
+                                           tracking_params.points[1][0], tracking_params.points[1][1],
+                                           tracking_params.lambda_c);
                 if(timer.running === false) {
                     tracking_params.nearest_neighbor = []
                     tracking_params.pda              = []
@@ -431,15 +430,11 @@ Item {
             if(tracking_params.show_gaussian_sum === true)        drawPoints(ctx, tracking_params.gaussian_sum, colorTools.gaussian_sum)
 
 
+            var lambda_c = tracking_params.clutters.length / tracking_params.measurements.length;
+            if(state_machine.state === state_machine.timer_running)
+                sendMeasurement(tracking_params.measurements, tracking_params.clutters, lambda_c, curr_pointer)
+
             if(tracking_params.show_measurement == true) {
-
-                var lambda_c = tracking_params.clutters.length / tracking_params.measurements.length;
-
-                if(state_machine.state === state_machine.timer_running) {
-
-                    sendMeasurement(tracking_params.measurements, tracking_params.clutters, lambda_c, curr_pointer)
-                }
-
 
                 if(tracking_params.show_all_meas == true) {
 
