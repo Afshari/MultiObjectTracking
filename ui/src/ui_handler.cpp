@@ -4,27 +4,18 @@
 // [✓] - Remove Stop Button
 // [✓] - Modify Show Measurements to follow curr_pointer
 // [✓] - Complete StateMachine
+// [✓] - Remove Unused functions
+// [✓] - Remove Timer
+// [✓] - Add Page Title
+// [ ] - Add README
+// [ ] - Add correct names for Tracking formulas
+// [ ] - Run Unit Test to see results
 
 
 UIHandler::UIHandler(const QQmlApplicationEngine &engine, QObject *parent) : QObject(parent) {
 
-    QTimer *timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-    //    timer->start(1000);
     engine.rootContext()->setContextProperty("backend", this);
 }
-
-
-void UIHandler::update() {
-
-    // emit this->recvData(QString::number(counter));
-}
-
-void UIHandler::receiveFromQml(QString value) {
-
-    qDebug() << "Received: " << value;
-}
-
 
 void UIHandler::initSingleTrackers(int x1, int y1, int x2, int y2, int lambda_c) {
 
@@ -152,7 +143,6 @@ void UIHandler::singleMeasurements(QList<int> xs, QList<int> ys) {
 
     emit this->singleTrackingAddItem("repaint", x, y);
 }
-
 
 void UIHandler::multiMeasurements(QList<int> xs, QList<int> ys) {
 

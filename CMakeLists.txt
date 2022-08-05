@@ -22,16 +22,16 @@ add_definitions(-DRUN_TEST=1)
 add_definitions(-DRUN_DEBUG=2)
 add_definitions(-DRUN_APP=3)
 
-set( SET_RUN_TEST   "1")
-set( SET_RUN_DEBUG  "2")
-set( SET_RUN_APP    "3")
+set(SET_RUN_TEST   "1")
+set(SET_RUN_DEBUG  "2")
+set(SET_RUN_APP    "3")
 
 ##### Here you can define the Running Mode of the Application #####
 # set( SET_RUN_TYPE ${SET_RUN_TEST} )
 
 
 find_package(Qt5Test REQUIRED)
-find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(Qt5Core)
 find_package(Qt5Quick)
 find_package(Qt5Network)

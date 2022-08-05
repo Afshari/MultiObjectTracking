@@ -151,7 +151,7 @@ Window {
                     Label {
                         id: labelTopInfo
                         color: "#5f6a82"
-                        text: qsTr("Application description")
+                        text: qsTr("Multi Object Tracking")
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: parent.top
@@ -215,7 +215,7 @@ Window {
                     Label {
                         id: label
                         color: "#c3cbdd"
-                        text: qsTr("My Application Title")
+                        text: qsTr("Multi Object Tracking")
                         anchors.left: iconApp.right
                         anchors.right: parent.right
                         anchors.top: parent.top
@@ -314,33 +314,19 @@ Window {
                             }
                         }
 
-//                        LeftMenuBtn {
-//                            id: btnImagePage
-//                            width: leftMenu.width
-//                            text: qsTr("Show Image")
-//                            btnIconSource: "../ui/images/svg_images/camera.svg"
-//                            isActiveMenu: false
-//                            onClicked: {
-//                                if(btnImagePage.isActiveMenu == false) {
-//                                    internal.pageNavigation("pages/showImages.qml")
-//                                    btnImagePage.isActiveMenu = true
-//                                }
-//                            }
-//                        }
-
-                        LeftMenuBtn {
-                            id: btnPaintPage
-                            width: leftMenu.width
-                            text: qsTr("Paint")
-                            btnIconSource: "../ui/images/svg_images/paint.svg"
-                            isActiveMenu: false
-                            onClicked: {
-                                if(btnPaintPage.isActiveMenu == false) {
-                                    internal.pageNavigation("pages/draw2d.qml")
-                                    btnPaintPage.isActiveMenu = true
-                                }
-                            }
-                        }
+                        //LeftMenuBtn {
+                        //    id: btnPaintPage
+                        //    width: leftMenu.width
+                        //    text: qsTr("Paint")
+                        //    btnIconSource: "../ui/images/svg_images/paint.svg"
+                        //    isActiveMenu: false
+                        //    onClicked: {
+                        //        if(btnPaintPage.isActiveMenu == false) {
+                        //            internal.pageNavigation("pages/draw2d.qml")
+                        //            btnPaintPage.isActiveMenu = true
+                        //        }
+                        //    }
+                        //}
 
                         LeftMenuBtn {
                             id: btnSingleObjectTracking
@@ -369,52 +355,6 @@ Window {
                                 }
                             }
                         }
-
-
-//                        LeftMenuBtn {
-//                            id: btnOpen
-//                            width: leftMenu.width
-//                            text: qsTr("Open")
-//                            btnIconSource: "../ui/images/svg_images/open_icon.svg"
-
-//                            onPressed: {
-//                                fileOpen.open()
-//                            }
-
-//                            FileDialog{
-//                                id: fileOpen
-//                                title: "Please choose a file"
-//                                folder: shortcuts.home
-//                                selectMultiple: false
-//                                nameFilters: ["Text File (*.txt)"]
-//                                onAccepted: {
-//                                    backend.openFile(fileOpen.fileUrl)
-//                                }
-//                            }
-//                        }
-
-//                        LeftMenuBtn {
-//                            id: btnSave
-//                            width: leftMenu.width
-//                            text: qsTr("Save")
-//                            btnIconSource: "../ui/images/svg_images/save_icon.svg"
-
-//                            onPressed: {
-//                                fileSave.open()
-//                            }
-
-//                            FileDialog{
-//                                id: fileSave
-//                                title: "Save file"
-//                                folder: shortcuts.home
-//                                nameFilters: ["Text File (*.txt)"]
-//                                selectExisting: false
-//                                onAccepted: {
-//                                    backend.getTextField(actualPage.getText)
-//                                    backend.writeFile(fileSave.fileUrl)
-//                                }
-//                            }
-//                        }
                     }
 
                     LeftMenuBtn {
@@ -468,7 +408,7 @@ Window {
                     Label {
                         id: labelTopInfo1
                         color: "#5f6a82"
-                        text: qsTr("Application description")
+                        text: qsTr("Multi Object Tracking")
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: parent.top

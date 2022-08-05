@@ -42,7 +42,6 @@ Item {
         running: false;
         repeat: false
         onTriggered: {
-            //console.log("Timer Tick");
             tracking_params.line_pointer += 1
             canvas.requestPaint()
         }
@@ -318,8 +317,9 @@ Item {
                         var points = tracking_params.points[i]
                         var curr_measurements = []
                         for(var j = 0; j < points.length; j++) {
-                            var x = points[j][0] + (Math.random() - 0.5) * 15
-                            var y = points[j][1] + (Math.random() - 0.5) * 15
+                            var coeff = (j < 50) ? 6 : 12;
+                            var x = points[j][0] + (Math.random() - 0.5) * coeff;
+                            var y = points[j][1] + (Math.random() - 0.5) * coeff;
                             curr_measurements.push([x, y])
                         }
                         tracking_params.measurements.push(curr_measurements)
