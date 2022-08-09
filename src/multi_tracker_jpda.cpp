@@ -46,12 +46,12 @@ void MultiTrackerJPDA::step(const MatrixXd &z, bool debug) {
                 MatrixXd S    = (*estimator->H(states->at(i)->getX())) * states->at(i)->getP() * estimator->H(states->at(i)->getX())->transpose();
                 VectorXd zbar = *estimator->h(states->at(i)->getX());
 
-                double formula_num_1 = log( sensor->get_P_D() / sensor->get_intensity() );
-                double formula_num_2 = -0.5 * log( (2 * M_PI * S).determinant() );
-                MatrixXd formula_mat_1 = -0.5 * (post_z(Eigen::all, j) - zbar).transpose() * S.inverse() * (post_z(Eigen::all, j) - zbar);
-                double formula_num_3 = formula_mat_1(0, 0);
+                double fn_1 = log( sensor->get_P_D() / sensor->get_intensity() );
+                double fn_2 = -0.5 * log( (2 * M_PI * S).determinant() );
+                MatrixXd fm_1 = -0.5 * (post_z(Eigen::all, j) - zbar).transpose() * S.inverse() * (post_z(Eigen::all, j) - zbar);
+                double fn3 = fm_1(0, 0);
 
-                L(i, j) = -( formula_num_1 + formula_num_2 + formula_num_3  );
+                L(i, j) = -( fn_1 + fn_2 + fn3  );
             }
         }
         L(i,m+i) = - log(1-sensor->get_P_D());

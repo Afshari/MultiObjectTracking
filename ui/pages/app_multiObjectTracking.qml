@@ -163,7 +163,7 @@ Item {
                     var x2 = points[i+1][0];
                     var y2 = points[i+1][1];
                     var d = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
-                    if(d >= 4) {
+                    if(d > 4) {
                         points.splice(i+1, 0, [(x1+x2)/2, (y1+y2)/2]);
                         found_gap = true;
                     }
@@ -554,10 +554,11 @@ Item {
                         if(curr_pointer > 0) {
                             drawPoints(ctx, tracking_params.clutters.slice(parseInt(lambda_c * (curr_pointer-1)),
                                                                            parseInt(lambda_c * curr_pointer)), colorTools.measurement, 3, true)
-                            if(curr_pointer < max_points - 10)
-                                drawArrPoints(ctx, tracking_params.measurements, colorTools.measurement, curr_pointer, curr_pointer+10, 3, true)
-                            else
-                                drawArrPoints(ctx, tracking_params.measurements, colorTools.measurement,curr_pointer, max_points-1, 3, true)
+                            drawArrPoints(ctx, tracking_params.measurements, colorTools.measurement, curr_pointer, curr_pointer+1, 3, true)
+                            //if(curr_pointer < max_points - 10)
+                            //    drawArrPoints(ctx, tracking_params.measurements, colorTools.measurement, curr_pointer, curr_pointer+10, 3, true)
+                            //else
+                            //    drawArrPoints(ctx, tracking_params.measurements, colorTools.measurement,curr_pointer, max_points-1, 3, true)
                         }
                     } else {
                         drawArrPoints(ctx, tracking_params.measurements, colorTools.measurement, 0, curr_pointer, 3, true);

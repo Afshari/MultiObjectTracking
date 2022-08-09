@@ -50,7 +50,7 @@ $ cmake -DSET_RUN_TYPE=SET_RUN_APP ..
 ```
 
 ### 5. Demonstration Video
-You can watch the [Demonstration Video]() on the Youtube.
+You can watch the [Demonstration Video](https://www.youtube.com/watch?v=ohTrHClGuZM) on the Youtube.
 
 
 ### 6. TODO

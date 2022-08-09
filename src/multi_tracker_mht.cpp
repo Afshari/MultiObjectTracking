@@ -88,12 +88,12 @@ void MultiTrackerMHT::generate_H_w_i(NestedPtrVecState& curr_H_i, vector<VectorX
                         estimator->H(this->H_i->at(i)->at(lh)->getX())->transpose();
                 VectorXd zbar = *estimator->h(this->H_i->at(i)->at(lh)->getX());
 
-                double formula_num_1 = log( sensor->get_P_D() / sensor->get_intensity() );
-                double formula_num_2 = -0.5 * log( (2 * M_PI * S).determinant() );
-                MatrixXd formula_mat_1 = -0.5 * (z(Eigen::all, j) - zbar).transpose() * S.inverse() * (z(Eigen::all, j) - zbar);
-                double formula_num_3 = formula_mat_1(0, 0);
+                double fn_1 = log( sensor->get_P_D() / sensor->get_intensity() );
+                double fn_2 = -0.5 * log( (2 * M_PI * S).determinant() );
+                MatrixXd fm_1 = -0.5 * (z(Eigen::all, j) - zbar).transpose() * S.inverse() * (z(Eigen::all, j) - zbar);
+                double fn_3 = fm_1(0, 0);
 
-                curr_log_w_i[i](newidx, 0) = formula_num_1 + formula_num_2 + formula_num_3;
+                curr_log_w_i[i](newidx, 0) = fn_1 + fn_2 + fn_3;
                 inner_H_i->at(newidx) = estimator->update(*this->H_i->at(i)->at(lh), new_z(Eigen::all, L_idx));
             }
             // int newidx = (lh+1)*(m+1)-1;

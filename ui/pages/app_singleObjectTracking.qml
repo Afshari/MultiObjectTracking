@@ -447,10 +447,11 @@ Item {
                         if(curr_pointer > 0) {
                             drawPoints(ctx, tracking_params.clutters.slice(parseInt(lambda_c * (curr_pointer-1)),
                                                                            parseInt(lambda_c * curr_pointer)), colorTools.measurement, 3, true)
-                            if(curr_pointer < tracking_params.measurements.length - 10)
-                                drawPoints(ctx, tracking_params.measurements.slice(curr_pointer, curr_pointer+10), colorTools.measurement, 3, true)
-                            else
-                                drawPoints(ctx, tracking_params.measurements.slice(curr_pointer, tracking_params.measurements.length-1), colorTools.measurement, 3, true)
+                            drawPoints(ctx, tracking_params.measurements.slice(curr_pointer, curr_pointer+1), colorTools.measurement, 3, true)
+                            //if(curr_pointer < tracking_params.measurements.length - 10)
+                            //    drawPoints(ctx, tracking_params.measurements.slice(curr_pointer, curr_pointer+10), colorTools.measurement, 3, true)
+                            //else
+                            //    drawPoints(ctx, tracking_params.measurements.slice(curr_pointer, tracking_params.measurements.length-1), colorTools.measurement, 3, true)
                         }
                     } else {
                         drawPoints(ctx, tracking_params.clutters, colorTools.measurement, 3, true)
