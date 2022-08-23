@@ -62,4 +62,6 @@ You can watch the [Demonstration Video](https://www.youtube.com/watch?v=ohTrHClG
 ~~~
 1. Multi-Object Tracking for Automotive Systems
    https://www.youtube.com/channel/UCa2-fpj6AV8T6JK1uTRuFpw
+2. QML User Interface (I used QML from this github repository)
+   https://github.com/Wanderson-Magalhaes/QtQuick_Application_With_Python
 ~~~
